@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Protection Compliance Analysis System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Data Protection Compliance Analysis System</h1>
+            <p class="subtitle">Multi-Agent Legal Compliance Workflow</p>
+        </header>
+
+        <div class="progress-bar">
+            <div class="progress-step active" data-phase="1">
+                <span class="step-number">1</span>
+                <span class="step-label">Legal Identification</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-phase="2">
+                <span class="step-number">2</span>
+                <span class="step-label">Regulation Research</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-phase="3">
+                <span class="step-number">3</span>
+                <span class="step-label">Gap Analysis</span>
+            </div>
+        </div>
+
+        <!-- Phase 1: Legal Identification -->
+        <section id="phase1" class="phase-section active">
+            <div class="section-header">
+                <h2>Phase One: Legal Identification</h2>
+                <span class="agent-badge">law-retrieval agent</span>
+            </div>
+            <div class="form-group">
+                <label for="industry">Company Industry</label>
+                <select id="industry">
+                    <option value="">Select Industry</option>
+                    <option value="finance">Financial Services</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="ecommerce">E-Commerce</option>
+                    <option value="technology">Technology</option>
+                    <option value="education">Education</option>
+                    <option value="retail">Retail</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="telecommunications">Telecommunications</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="country">Target Country/Region</label>
+                <select id="country">
+                    <option value="">Select Country/Region</option>
+                    <option value="EU">European Union</option>
+                    <option value="US">United States</option>
+                    <option value="CN">China</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="JP">Japan</option>
+                    <option value="KR">South Korea</option>
+                    <option value="SG">Singapore</option>
+                    <option value="AU">Australia</option>
+                    <option value="BR">Brazil</option>
+                    <option value="IN">India</option>
+                </select>
+            </div>
+            <button id="analyze-laws" class="btn-primary">
+                <span class="btn-icon">&#128269;</span>
+                Identify Applicable Laws
+            </button>
+            <div id="laws-result" class="result-container hidden"></div>
+        </section>
+
+        <!-- Phase 2: Clause Analysis -->
+        <section id="phase2" class="phase-section">
+            <div class="section-header">
+                <h2>Phase Two: Regulation Research</h2>
+                <span class="agent-badge">clause-analysis agent</span>
+            </div>
+            <div class="form-group">
+                <label for="law-select">Select Law for Analysis</label>
+                <select id="law-select">
+                    <option value="">Select a Law</option>
+                </select>
+            </div>
+            <button id="analyze-clauses" class="btn-primary" disabled>
+                <span class="btn-icon">&#128196;</span>
+                Analyze Compliance Controls
+            </button>
+            <div id="clauses-result" class="result-container hidden"></div>
+        </section>
+
+        <!-- Phase 3: Gap Analysis -->
+        <section id="phase3" class="phase-section">
+            <div class="section-header">
+                <h2>Phase Three: Gap Analysis</h2>
+                <span class="agent-badge">gap-analysis agent</span>
+            </div>
+
+            <!-- Dimension 1: Organizational Compliance Design Status -->
+            <div class="dimension-section">
+                <h4>Organizational Compliance Design Status</h4>
+
+                <div class="form-group">
+                    <label for="org-structure">1) Current organizational structure and management methods for data security and privacy compliance in the parent and subsidiary companies:</label>
+                    <textarea id="org-structure" rows="4" placeholder="e.g., Parent company has a Data Protection Office under Legal Department with 5 FTEs; subsidiaries follow centralized governance model with local privacy coordinators reporting to headquarters CPO..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>2) Status of the privacy protection management:</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input">
+                            <label for="privacy-officer">Whether a dedicated data security and privacy protection officer has been appointed:</label>
+                            <textarea id="privacy-officer" rows="2" placeholder="e.g., Yes - Chief Privacy Officer appointed since 2023, reports to General Counsel, manages team of 5 privacy professionals..."></textarea>
+                        </div>
+                        <div class="sub-input">
+                            <label for="privacy-certification">Whether privacy protection qualification certification or information security-related certification has been obtained:</label>
+                            <textarea id="privacy-certification" rows="2" placeholder="e.g., ISO 27001 certified (2022), ISO 27701 certified (2023), SOC 2 Type II report available, CPO holds CIPP/E and CIPM certifications..."></textarea>
+                        </div>
+                        <div class="sub-input">
+                            <label for="privacy-audit">Whether data processing activities have been audited and summarized:</label>
+                            <textarea id="privacy-audit" rows="2" placeholder="e.g., Annual internal audits conducted; quarterly privacy reports to board; external audit by Big 4 firm completed 2024; RoPA maintained and updated semi-annually..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>3) Related internal control management for data security and privacy protection:</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input">
+                            <label for="internal-standards">What are the relevant internal control management standards for privacy compliance (including data collection, data processing, data storage, data sharing, privacy disposal, and data transfer)?</label>
+                            <textarea id="internal-standards" rows="2" placeholder="e.g., Privacy Management Framework v2.1 covers 6 stages of data lifecycle; 25 policies including Data Collection Policy, Processing Guidelines, Storage Standards, Sharing Procedures, Disposal Protocol, and Transfer Requirements..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="data-classification">Is data classified and graded for management according to the relevant systems, including management policies, classification methods, security levels, and access permissions for each type and grade of data?</label>
+                            <textarea id="data-classification" rows="2" placeholder="e.g., 4-tier classification (Public/Internal/Confidential/Restricted); color-coded access badges; automated DLP policies; quarterly access reviews; encryption required for Confidential and Restricted tiers..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="third-party-check">In scenarios of data sharing/transfer/entrusted processing, is an external third-party data security and privacy protection check conducted?</label>
+                            <textarea id="third-party-check" rows="2" placeholder="e.g., Security assessments required before contract signing; annual audits for existing partners; SOC 2 reports reviewed; on-site inspections for high-risk processors; security questionnaire for all vendors..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="emergency-plan">Has the company developed an emergency response plan for personal information security incidents?</label>
+                            <textarea id="emergency-plan" rows="2" placeholder="e.g., Incident Response Plan v3.0 covers 4 severity levels; response team on-call 24/7; tabletop exercises quarterly; breach notification procedures documented; communication templates prepared..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="disposal-records">Are records maintained when performing data disposal activities?</label>
+                            <textarea id="disposal-records" rows="2" placeholder="e.g., Disposal logs retained for 7 years; certificates of destruction obtained from vendors; automated deletion workflows for expired data; quarterly verification of deletion compliance..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="periodic-pipia">Is a privacy impact assessment conducted periodically and are assessment reports generated (including frequency and scope), and are the assessment records and handling records retained?</label>
+                            <textarea id="periodic-pipia" rows="2" placeholder="e.g., PIPIA conducted annually for high-risk processing; ad-hoc assessments for new projects; reports reviewed by CPO and legal; records retained for 6 years; mitigation tracked until completion..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="rights-response-team">Is there a response mechanism and corresponding team for personal information subject rights?</label>
+                            <textarea id="rights-response-team" rows="2" placeholder="e.g., Dedicated DSAR team with 5 members; self-service portal for access requests; 30-day SLA; identity verification procedures; secure data transmission methods; response templates standardized..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="complaint-mechanism">Is a mechanism established to protect the exercise of personal information rights and a complaint mechanism?</label>
+                            <textarea id="complaint-mechanism" rows="2" placeholder="e.g., Multi-channel complaint intake (web, email, phone); escalation to CPO within 48 hours; tracking system for all complaints; resolution target 15 days; annual complaint analysis reported to board..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimension 2: System-Level Data Security Measures -->
+            <div class="dimension-section">
+                <h4>System-Level Data Security Measures</h4>
+
+                <div class="form-group">
+                    <label for="pi-inventory">1) Collected Personal Information Fields, Quantity, and Collection Methods:</label>
+                    <textarea id="pi-inventory" rows="3" placeholder="e.g., Name (required), Email (required), Phone (optional), ID Number (sensitive); ~500K records collected via web forms, mobile apps, and customer service..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="internal-transmission">2) Internal System Transmission Status:</label>
+                    <textarea id="internal-transmission" rows="2" placeholder="e.g., Data transmitted between CRM, ERP, and Data Warehouse via internal API with TLS 1.3 encryption..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="third-party-sharing">3) External Third-Party Sharing/Commissioned Processing:</label>
+                    <textarea id="third-party-sharing" rows="3" placeholder="e.g., Cloud storage with AWS (DPA signed), Email service via SendGrid, Analytics via Google Analytics (IP anonymized), Payment via Stripe..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="access-control">4) Access Control Status:</label>
+                    <textarea id="access-control" rows="2" placeholder="e.g., Role-based access control (RBAC) implemented; 4 access levels; quarterly access reviews; MFA required for all admin accounts..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="display-obfuscation">5) Obfuscation in Display:</label>
+                    <textarea id="display-obfuscation" rows="2" placeholder="e.g., ID numbers masked as ****1234, phone numbers as 138****8888; full masking for customer service view..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="deletion-mechanism">6) Deletion/Anonymization Mechanisms:</label>
+                    <textarea id="deletion-mechanism" rows="3" placeholder="e.g., Automated deletion after retention period (7 years for financial data, 3 years for marketing); crypto-shredding for immediate deletion; anonymization for analytics retention..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="processing-logs">7) Methods and Retention Period for Personal Information Processing Logs:</label>
+                    <textarea id="processing-logs" rows="3" placeholder="e.g., All processing activities logged with user ID, timestamp, action type, and data fields accessed; logs retained for 2 years; stored in tamper-proof SIEM system with read-only access..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>8) Data Storage Location and Security Mechanisms:</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input">
+                            <label for="storage-location">Data storage location and location of the data center:</label>
+                            <textarea id="storage-location" rows="2" placeholder="e.g., Primary: AWS us-east-1 (Virginia), Secondary: AWS eu-west-1 (Ireland); All within jurisdictions with adequacy decisions..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="storage-method">Storage method (offline storage/cloud server storage):</label>
+                            <textarea id="storage-method" rows="2" placeholder="e.g., Cloud-based primary storage with 99.99% availability SLA; offline tape backup for disaster recovery; hybrid approach with hot data in cloud, cold data in object storage..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="platform-type">Whether the platform is self-built or uses third-party cloud services:</label>
+                            <textarea id="platform-type" rows="2" placeholder="e.g., Hybrid model - self-managed Kubernetes clusters on AWS EC2 for core processing; AWS managed services for database (RDS) and caching (ElastiCache); reduces operational overhead while maintaining control..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="data-sync">Whether synchronization with other data centers is involved:</label>
+                            <textarea id="data-sync" rows="2" placeholder="e.g., Real-time cross-region replication between US-East and EU-West; asynchronous replication to APAC for DR; RPO of 5 minutes, RTO of 4 hours; sync monitored via CloudWatch dashboards..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="security-mechanisms">Data security mechanisms (encryption measures, isolated storage, etc.):</label>
+                            <textarea id="security-mechanisms" rows="2" placeholder="e.g., AES-256 encryption at rest with AWS KMS; TLS 1.3 in transit; VPC isolated storage with private subnets; network segmentation; database-level TDE; field-level encryption for PII..."></textarea>
+                        </div>
+
+                        <div class="sub-input">
+                            <label for="backup-status">Whether data is backed up, and backup storage location:</label>
+                            <textarea id="backup-status" rows="2" placeholder="e.g., Daily automated backups to S3 with 30-day retention; weekly snapshots to Glacier for 7-year retention; backups encrypted and stored in geographically separate region; quarterly restore testing documented..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimension 3: Business Process Design Status -->
+            <div class="dimension-section">
+                <h4>Business Process Design Status</h4>
+
+                <div class="form-group">
+                    <label for="collection-evaluation">1) Evaluation of Collection Purposes, Legality, Necessity, and Minimal Scope:</label>
+                    <textarea id="collection-evaluation" rows="3" placeholder="e.g., All data collection reviewed against stated purposes; legal basis documented (consent for marketing, contract for service delivery); data minimization audit completed Q2 2024..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="processing-methods">2) Data Processing Methods:</label>
+                    <textarea id="processing-methods" rows="2" placeholder="e.g., Automated processing for account management, profiling for personalization (with opt-out), manual review for fraud detection..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="privacy-policy">3) Privacy Policy Configuration:</label>
+                    <textarea id="privacy-policy" rows="2" placeholder="e.g., Layered privacy notice implemented; available in 5 languages; last updated 2024-03-15; covers all processing activities..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="rights-response">4) User Rights Response Methods:</label>
+                    <textarea id="rights-response" rows="3" placeholder="e.g., Self-service portal for access/export (available), email for deletion requests (SLA: 30 days), dedicated hotline for complaints; workflow integrated with CRM..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="pipia-results">5) Personal Information Protection Impact Assessment (PIPIA) Results:</label>
+                    <textarea id="pipia-results" rows="3" placeholder="e.g., DPIA conducted for: biometric authentication (2024-01), large-scale profiling (2024-02), third-party data sharing (2024-03); all high risks mitigated with documented controls..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>6) Do you share, provide, sell, authorize the use of, or publicly disclose personal information to third parties?</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input">
+                            <label for="third-party-sharing-circumstances">If yes, please describe the specific circumstances (e.g., marketing and promotion), including the types and purposes of the data being shared, provided, or disclosed:</label>
+                            <textarea id="third-party-sharing-circumstances" rows="3" placeholder="e.g., Yes - sharing with marketing partners for promotional campaigns (email addresses, purchase history); data shared with payment processors (card details); analytics providers (behavioral data); cloud storage providers (all data types)..." style="resize: vertical;"></textarea>
+                        </div>
+                        <div class="sub-input">
+                            <label for="third-party-sharing-consent">Have you obtained consent from the individual whose personal information is involved or from the data provider?</label>
+                            <textarea id="third-party-sharing-consent" rows="2" placeholder="e.g., Explicit opt-in consent obtained via checkbox at checkout for marketing sharing; contractual necessity basis for payment processors; legitimate interest assessment completed for analytics; consent records maintained in CRM..." style="resize: vertical;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipient-supervision">7) Please clarify whether you supervise the data processing activities of the data recipients.</label>
+                    <textarea id="recipient-supervision" rows="2" placeholder="e.g., Quarterly audits conducted for all data recipients; annual security assessments required; breach notification clause in all contracts; right to audit exercised for high-risk partners..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipient-contracts">8) Do you sign contracts with the recipients to stipulate the purpose, duration, method of processing shared data, types of personal information, protective measures, and the rights and obligations of both parties?</label>
+                    <textarea id="recipient-contracts" rows="3" placeholder="e.g., Standard Data Processing Agreement used for all recipients; contracts specify: permitted purposes, 3-year maximum duration, encryption requirements, subprocessor restrictions, audit rights, breach notification within 24 hours..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>9) Please clarify scenarios of internal sharing (e.g., subsidiaries, affiliated companies, etc.).</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input">
+                            <label for="internal-sharing-scenarios">If any, explain the business purpose of the transfer, whether the data transfer is complete or partial, and the systems involved:</label>
+                            <textarea id="internal-sharing-scenarios" rows="3" placeholder="e.g., Data shared with 3 subsidiaries in EU and APAC for unified customer service; limited to customer profile and transaction history; transferred via secure API with role-based access; governed by intra-group data transfer agreement..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="entrusted-pipia">10) Before entrusting others to process personal information, do you conduct a personal information protection impact assessment?</label>
+                    <textarea id="entrusted-pipia" rows="2" placeholder="e.g., PIPIA conducted for all new entrusted processing relationships; annual review for existing processors; assessment covers: processor security capabilities, data location, subprocessor chain, return/deletion procedures..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="entrusted-contracts">11) Do you sign contracts with the entrusted parties to stipulate the purpose, duration, method of processing, types of personal information, protective measures, and the rights and obligations of both parties?</label>
+                    <textarea id="entrusted-contracts" rows="3" placeholder="e.g., All processors required to sign Data Processing Addendum; contracts include: specific processing instructions, confidentiality clauses, security standards (ISO 27001 minimum), prohibition on unauthorized subprocessors, data return/deletion upon termination..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="entrusted-supervision">12) Do you supervise the personal information processing activities of the entrusted parties?</label>
+                    <textarea id="entrusted-supervision" rows="3" placeholder="e.g., Monthly security reports required from all processors; annual on-site audits for critical processors; continuous monitoring via SOC 2 reports; immediate notification required for any security incidents; right to terminate for non-compliance..."></textarea>
+                </div>
+            </div>
+
+            <button id="analyze-gaps" class="btn-primary" disabled>
+                <span class="btn-icon">&#128202;</span>
+                Generate Gap Analysis Report
+            </button>
+            <div id="gaps-result" class="result-container hidden"></div>
+        </section>
+
+        <div class="actions-bar hidden" id="actions-bar">
+            <button id="export-report" class="btn-secondary">
+                <span class="btn-icon">&#128190;</span>
+                Export Full Report
+            </button>
+            <button id="reset-all" class="btn-outline">
+                <span class="btn-icon">&#8634;</span>
+                Start New Analysis
+            </button>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

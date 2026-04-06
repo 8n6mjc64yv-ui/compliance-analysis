@@ -1,0 +1,25 @@
+{
+  "name": "compliance-analysis-tool",
+  "version": "1.0.0",
+  "description": "Data Protection Compliance Analysis System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "deploy:gh": "echo 'See DEPLOYMENT.md for GitHub Pages instructions'",
+    "deploy:netlify": "echo 'See DEPLOYMENT.md for Netlify instructions'",
+    "deploy:vercel": "vercel"
+  },
+  "keywords": [
+    "compliance",
+    "gdpr",
+    "privacy",
+    "data-protection",
+    "gap-analysis"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
