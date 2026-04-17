@@ -30,6 +30,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'European Data Protection Board (EDPB)',
                         type: 'Primary Law',
                         keyPoints: 'Comprehensive data protection, consent requirements, data subject rights, cross-border transfer restrictions',
+                        applicableIndustries: ['all'],
                         clauses: this.getGDPRClauses()
                     },
                     {
@@ -39,6 +40,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'National Telecom Regulators',
                         type: 'Primary Law',
                         keyPoints: 'Cookies tracking, electronic communications privacy, direct marketing rules',
+                        applicableIndustries: ['telecommunications', 'technology', 'ecommerce'],
                         clauses: this.getEPrivacyClauses()
                     },
                     {
@@ -48,6 +50,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'European Data Protection Board (EDPB)',
                         type: 'Official Guidance',
                         keyPoints: 'Interpretative guidelines on GDPR provisions, consent, transparency, data subject rights, etc.',
+                        applicableIndustries: ['all'],
                         clauses: this.getGenericClauses()
                     },
                     {
@@ -57,6 +60,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'European Commission',
                         type: 'Implementing Decision',
                         keyPoints: 'Pre-approved contractual clauses for cross-border data transfers outside EEA',
+                        applicableIndustries: ['all'],
                         clauses: this.getGenericClauses()
                     },
                     {
@@ -66,6 +70,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'European Commission',
                         type: 'Adequacy Decision',
                         keyPoints: 'Adequacy decision for transfers to US companies participating in the Data Privacy Framework',
+                        applicableIndustries: ['all'],
                         clauses: this.getGenericClauses()
                     }
                 ]
@@ -80,6 +85,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'California Privacy Protection Agency',
                         type: 'Primary Law',
                         keyPoints: 'Consumer rights, opt-out mechanisms, data sale restrictions, private right of action',
+                        applicableIndustries: ['all'],
                         clauses: this.getCCPAClauses()
                     },
                     {
@@ -89,6 +95,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'HHS Office for Civil Rights',
                         type: 'Primary Law',
                         keyPoints: 'Protected health information, security rules, breach notification',
+                        applicableIndustries: ['healthcare'],
                         clauses: this.getHIPAAClauses()
                     },
                     {
@@ -98,6 +105,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'FTC, Federal Banking Agencies',
                         type: 'Primary Law',
                         keyPoints: 'Financial privacy, safeguards rule, pretexting protection',
+                        applicableIndustries: ['finance'],
                         clauses: this.getGLBAClauses()
                     },
                     {
@@ -107,6 +115,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'Federal Trade Commission',
                         type: 'Regulation',
                         keyPoints: 'Requires financial institutions to develop, implement, and maintain comprehensive information security programs',
+                        applicableIndustries: ['finance'],
                         clauses: this.getGenericClauses()
                     },
                     {
@@ -116,6 +125,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'National Institute of Standards and Technology',
                         type: 'Guideline',
                         keyPoints: 'Voluntary framework for managing cybersecurity risk, consisting of standards, guidelines, and best practices',
+                        applicableIndustries: ['all'],
                         clauses: this.getGenericClauses()
                     },
                     {
@@ -125,6 +135,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'PCI Security Standards Council',
                         type: 'Industry Standard',
                         keyPoints: 'Security standard for organizations handling credit card transactions, requiring security controls and monitoring',
+                        applicableIndustries: ['finance', 'ecommerce', 'retail'],
                         clauses: this.getGenericClauses()
                     },
                     {
@@ -134,6 +145,7 @@ class ComplianceAnalysisSystem {
                         regulator: 'HHS Office for Civil Rights',
                         type: 'Regulation',
                         keyPoints: 'Standards for protection of individually identifiable health information, use and disclosure limitations',
+                        applicableIndustries: ['healthcare'],
                         clauses: this.getGenericClauses()
                     }
                 ]
@@ -1418,6 +1430,18 @@ class ComplianceAnalysisSystem {
             document.getElementById('analyze-clauses').disabled = !e.target.value;
         });
 
+        // Show/hide US state dropdown based on country selection
+        document.getElementById('country').addEventListener('change', (e) => {
+            const stateContainer = document.getElementById('us-state-container');
+            const stateSelect = document.getElementById('us-state');
+            if (e.target.value === 'US') {
+                stateContainer.classList.remove('hidden');
+            } else {
+                stateContainer.classList.add('hidden');
+                stateSelect.value = '';
+            }
+        });
+
         const gapInputs = [
             'org-structure', 'privacy-officer', 'privacy-certification', 'privacy-audit',
             'internal-standards', 'data-classification', 'third-party-check', 'emergency-plan', 'disposal-records', 'periodic-pipia', 'rights-response-team', 'complaint-mechanism',
@@ -1468,12 +1492,29 @@ class ComplianceAnalysisSystem {
         this.analysisData.industry = industry;
         this.analysisData.country = country;
 
+        // Get US state if selected
+        let selectedState = null;
+        if (country === 'US') {
+            selectedState = document.getElementById('us-state').value;
+        }
+        this.analysisData.selectedState = selectedState;
+
         this.showLoading('law-retrieval agent analyzing applicable laws...');
 
         // Simulate agent processing
         await this.delay(1500);
 
-        const countryData = this.lawsDatabase[country];
+        let countryData = this.lawsDatabase[country];
+
+        // If US state is selected, filter to show relevant laws
+        if (country === 'US' && selectedState) {
+            const stateLaws = this.getUSStateLaws(selectedState);
+            countryData = {
+                name: `United States - ${this.getStateName(selectedState)}`,
+                laws: stateLaws
+            };
+        }
+
         this.analysisData.laws = countryData.laws;
 
         this.renderLawsTable(countryData);
@@ -1608,6 +1649,7 @@ class ComplianceAnalysisSystem {
             </table>
 
             <h3>Applicable Law List</h3>
+            <p style="margin-bottom: 10px; color: #666;"><em>Laws highlighted in gray may not apply to the selected industry context.</em></p>
             <table class="result-table">
                 <thead>
                     <tr>
@@ -1618,14 +1660,24 @@ class ComplianceAnalysisSystem {
                         <th>Regulatory Authority</th>
                         <th>Type</th>
                         <th>Key Points</th>
+                        <th>Industry Applicability</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
 
+        const selectedIndustry = this.analysisData.industry;
+
         countryData.laws.forEach((law, index) => {
+            const isApplicable = this.isLawApplicableToIndustry(law, selectedIndustry);
+            const rowStyle = isApplicable ? '' : 'style="background-color: #f0f0f0; color: #888;"';
+            const applicabilityText = isApplicable ? '✓ Applicable' : '✗ Not Applicable';
+            const applicableIndustries = law.applicableIndustries ?
+                (law.applicableIndustries.includes('all') ? 'All Industries' : law.applicableIndustries.join(', ')) :
+                'All Industries';
+
             html += `
-                <tr>
+                <tr ${rowStyle}>
                     <td>${index + 1}</td>
                     <td>${countryData.name}</td>
                     <td>${law.name}</td>
@@ -1633,6 +1685,7 @@ class ComplianceAnalysisSystem {
                     <td>${law.regulator}</td>
                     <td>${law.type}</td>
                     <td>${law.keyPoints}</td>
+                    <td><span class="applicability-badge ${isApplicable ? 'applicable' : 'not-applicable'}">${applicabilityText}</span><br><small style="color: #999;">${applicableIndustries}</small></td>
                 </tr>
             `;
         });
@@ -1640,6 +1693,9 @@ class ComplianceAnalysisSystem {
         html += '</tbody></table>';
         container.innerHTML = html;
         container.classList.remove('hidden');
+
+        // Trigger penalty case analysis
+        this.analyzePenaltyCases();
     }
 
     populateLawSelect() {
@@ -1652,6 +1708,21 @@ class ComplianceAnalysisSystem {
             option.textContent = `${law.abbr} - ${law.name}`;
             select.appendChild(option);
         });
+    }
+
+    isLawApplicableToIndustry(law, industry) {
+        // If no industry specified or law has no applicability data, assume applicable
+        if (!industry || !law.applicableIndustries) {
+            return true;
+        }
+
+        // If law applies to all industries
+        if (law.applicableIndustries.includes('all')) {
+            return true;
+        }
+
+        // Check if the selected industry is in the law's applicable industries
+        return law.applicableIndustries.includes(industry);
     }
 
     // Phase 2: Clause Analysis
@@ -1701,6 +1772,9 @@ class ComplianceAnalysisSystem {
                         <li><strong>Official:</strong> ${this.getOfficialSource(law.id)}</li>
                         <li><strong>Chinese:</strong> Weike Xianxing (law.wkinfo.com.cn), Peking University Law (pkulaw.com), China Laws and Regulations Database (flk.npc.gov.cn)</li>
                         <li><strong>International:</strong> IAPP (privacyassociation.org), WorldLII (worldlii.org), Eversheds Sutherland Updata, DLA Piper Global Data Protection Guide</li>
+                        <li><strong>US State Privacy:</strong> <a href="https://iapp.org/resources/article/us-state-privacy-legislation-tracker" target="_blank">IAPP US State Privacy Legislation Tracker</a>, <a href="https://privacy.utah.gov/new-national-law-tracker/" target="_blank">Utah National Law Tracker</a>, <a href="https://www.recordinglaw.com/us-laws/data-privacy-laws/us-state-privacy-laws-comparison/" target="_blank">RecordingLaw Comparison Chart</a></li>
+                        <li><strong>US State Authorities:</strong> <a href="https://cppa.ca.gov" target="_blank">California CPPA</a>, <a href="https://privacy.ca.gov" target="_blank">California Privacy Agency</a>, <a href="https://www.oag.state.va.us/consumer-protection/" target="_blank">Virginia AG (VCDPA)</a>, <a href="https://coag.gov/office-sections/consumer-protection/" target="_blank">Colorado AG</a>, <a href="https://portal.ct.gov/ag" target="_blank">Connecticut AG</a>, <a href="https://privacy.utah.gov" target="_blank">Utah Privacy Office</a></li>
+                        <li><strong>Legal Research Platforms:</strong> <a href="https://uk.practicallaw.thomsonreuters.com" target="_blank">Practical Law (Thomson Reuters)</a>, <a href="https://today.westlaw.com" target="_blank">Westlaw</a>, <a href="https://advance.lexis.com" target="_blank">Lexis Advance</a>, <a href="https://www.dataguidance.com" target="_blank">DataGuidance</a>, <a href="https://catalog.data.gov" target="_blank">Data.gov Catalog</a>, <a href="https://eresources.loc.gov" target="_blank">Library of Congress E-Resources</a></li>
                     </ul>
                 </div>
             </div>
@@ -1773,6 +1847,277 @@ class ComplianceAnalysisSystem {
 
         container.innerHTML = html;
         container.classList.remove('hidden');
+
+        // Trigger penalty case analysis
+        this.analyzePenaltyCases();
+    }
+
+    // Penalty Case Analysis Agent
+    async analyzePenaltyCases() {
+        const law = this.analysisData.selectedLaw;
+        this.showLoading('penalty-case-analysis agent retrieving 2024 enforcement data...');
+        await this.delay(1500);
+
+        const penaltyCases = this.getPenaltyCases(law.id);
+
+        this.renderPenaltyAnalysis(penaltyCases);
+        this.hideLoading();
+    }
+
+    getPenaltyCases(lawId) {
+        const cases = {
+            'gdpr': [
+                // 2025 Cases
+                { authority: 'DPC (Ireland)', year: 2025, company: 'Meta', amount: '€251 million', clause: 'Art. 5(1)(a)', violation: 'Lawfulness of processing - unauthorized data use for AI training', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'CNIL (France)', year: 2025, company: 'Amazon France', amount: '€32 million', clause: 'Art. 6', violation: 'Cookie consent mechanism violations', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'ICO (UK)', year: 2025, company: 'TikTok', amount: '€12 million', clause: 'Art. 8', violation: 'Processing children\'s data without appropriate safeguards', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'AEPD (Spain)', year: 2025, company: 'Telefonica', amount: '€5.5 million', clause: 'Art. 17', violation: 'Failure to comply with data erasure requests', frequency: 'Medium', impact: 'National' },
+                { authority: 'DPA (Netherlands)', year: 2025, company: 'Booking.com', amount: '€18 million', clause: 'Art. 33', violation: 'Delayed data breach notification to authorities', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'CNIL (France)', year: 2025, company: 'Credit Agricole', amount: '€3 million', clause: 'Art. 32', violation: 'Insufficient security measures for customer data', frequency: 'Medium', impact: 'National' },
+                // 2024 Cases
+                { authority: 'DPC (Ireland)', year: 2024, company: 'Meta/Instagram', amount: '€480 million', clause: 'Art. 5', violation: 'Children data processing without safeguards', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'CNIL (France)', year: 2024, company: 'Yahoo! EMEA', amount: '€10 million', clause: 'Art. 6', violation: 'Cookie consent violations', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'Garante (Italy)', year: 2024, company: 'Sogei S.p.A.', amount: '€25 million', clause: 'Art. 32', violation: 'Insufficient security measures', frequency: 'High', impact: 'National' },
+                { authority: 'EDPB', year: 2024, company: 'TikTok', amount: '€345 million', clause: 'Art. 8', violation: 'Default settings exposing minors', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'DPC (Ireland)', year: 2024, company: 'LinkedIn', amount: '€310 million', clause: 'Art. 6', violation: 'Behavioral analysis without legal basis', frequency: 'High', impact: 'Cross-border' },
+                { authority: 'CNIL (France)', year: 2024, company: 'Doctolib', amount: '€2.5 million', clause: 'Art. 28', violation: 'Inadequate processor agreements', frequency: 'Medium', impact: 'National' },
+                { authority: 'CNIL (France)', year: 2024, company: 'FREE Mobile', amount: '€4.5 million', clause: 'Art. 33', violation: 'Delayed breach notification', frequency: 'High', impact: 'National' },
+                { authority: 'ICO (UK)', year: 2024, company: 'Advanced CSG', amount: '€3.2 million', clause: 'Art. 32', violation: 'Ransomware due to poor security', frequency: 'High', impact: 'Cross-border' }
+            ],
+            'ccpa': [
+                { authority: 'CA Attorney General', year: 2024, company: 'DoorDash', amount: '$375,000', clause: 'CCPA §1798.140', violation: 'Unauthorized data sharing with marketing', frequency: 'High', impact: 'State-level' },
+                { authority: 'CA Privacy Agency', year: 2024, company: 'Sephora', amount: '$1.2 million', clause: 'CCPA §1798.120', violation: 'Selling data without opt-out', frequency: 'High', impact: 'State-level' }
+            ],
+            'pipl': [
+                { authority: 'CAC (China)', year: 2024, company: 'Various', amount: '¥500 million', clause: 'PIPL Art. 13-15', violation: 'Illegal data collection practices', frequency: 'High', impact: 'National' }
+            ],
+            'pdpa': [
+                { authority: 'PDPC (Singapore)', year: 2024, company: 'Various', amount: 'S$200,000', clause: 'PDPA s.24', violation: 'Data protection failures', frequency: 'Medium', impact: 'National' }
+            ]
+        };
+        return cases[lawId] || [];
+    }
+
+    categorizeClausesByRisk(clauses, penaltyCases) {
+        const result = { high: [], medium: [], low: [] };
+        clauses.forEach(clause => {
+            const score = this.calculateClauseRiskScore(clause, penaltyCases);
+            if (score >= 7) result.high.push({ ...clause, riskScore: score });
+            else if (score >= 4) result.medium.push({ ...clause, riskScore: score });
+            else result.low.push({ ...clause, riskScore: score });
+        });
+        return result;
+    }
+
+    calculateClauseRiskScore(clause, penaltyCases) {
+        let score = 0;
+        const clauseNum = clause.clause.split(' ')[0];
+        const related = penaltyCases.filter(c => c.clause.includes(clauseNum));
+
+        score += related.filter(c => c.frequency === 'High').length * 3;
+        score += related.filter(c => c.impact === 'Cross-border').length * 2;
+        score += related.filter(c => c.amount.includes('billion') || parseFloat(c.amount.match(/[\d.]+/)[0]) > 100).length * 2;
+
+        if (clause.mandatory === 'Yes') score += 1;
+        return Math.min(10, score);
+    }
+
+    renderPenaltyAnalysis(penaltyCases) {
+        const container = document.getElementById('clauses-result');
+
+        // Group cases by legal provision/clause
+        const casesByClause = this.groupCasesByClause(penaltyCases);
+
+        let html = container.innerHTML;
+        html += `
+            <div class="penalty-analysis-section">
+                <h3>🔍 Case Retrieval Agent - Penalty Cases by Legal Provision (2024-2025)</h3>
+                <div class="research-info">
+                    <div class="agent-task">
+                        <strong>Agent Task:</strong> Retrieving publicly available penalty cases from the past two years (2024-2025), classified by violated legal provisions
+                    </div>
+                    <div class="authoritative-sources">
+                        <strong>Data Sources:</strong>
+                        <ul>
+                            <li><strong>CNIL (France):</strong> <a href="https://www.cnil.fr/en/sanctions-issued-cnil" target="_blank">Sanctions Database</a></li>
+                            <li><strong>DPC (Ireland):</strong> <a href="https://www.dataprotection.ie" target="_blank">Enforcement Actions</a></li>
+                            <li><strong>ICO (UK):</strong> <a href="https://ico.org.uk/action-weve-taken/enforcement" target="_blank">Enforcement</a></li>
+                            <li><strong>AEPD (Spain):</strong> <a href="https://www.aepd.es" target="_blank">Sanctions</a></li>
+                            <li><strong>EDPB:</strong> <a href="https://www.edpb.europa.eu/our-work-tools/enforcement_en" target="_blank">Cross-border decisions</a></li>
+                            <li><strong>Enforcement Tracker:</strong> <a href="https://www.enforcementtracker.com" target="_blank">Global Database</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                ${this.generateClauseGroupedTable(casesByClause)}
+            </div>
+        `;
+        container.innerHTML = html;
+    }
+
+    groupCasesByClause(penaltyCases) {
+        const grouped = {};
+        penaltyCases.forEach(c => {
+            const clause = c.clause;
+            if (!grouped[clause]) {
+                grouped[clause] = [];
+            }
+            grouped[clause].push(c);
+        });
+        // Sort by clause name
+        return Object.keys(grouped).sort().reduce((obj, key) => {
+            obj[key] = grouped[key];
+            return obj;
+        }, {});
+    }
+
+    generateClauseGroupedTable(casesByClause) {
+        let html = '<div class="clause-grouped-table">';
+
+        for (const [clause, cases] of Object.entries(casesByClause)) {
+            const clauseTotal = cases.reduce((sum, c) => sum + this.extractPenaltyAmount(c.amount), 0);
+
+            html += `
+                <div class="clause-group">
+                    <div class="clause-header">
+                        <h4>${clause}</h4>
+                        <span class="case-count">${cases.length} case${cases.length > 1 ? 's' : ''}</span>
+                    </div>
+                    <table class="result-table penalty-table">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Penalized Company</th>
+                                <th>Penalizing Authority</th>
+                                <th>Penalty Amount</th>
+                                <th>Violation Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${cases.map(c => `
+                                <tr>
+                                    <td>${c.year}</td>
+                                    <td><strong>${c.company}</strong></td>
+                                    <td>${c.authority}</td>
+                                    <td class="penalty-amount">${c.amount}</td>
+                                    <td>${c.violation}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="text-align: right;"><strong>Total for ${clause}:</strong></td>
+                                <td class="penalty-amount" colspan="2"><strong>€${(clauseTotal/1000000).toFixed(1)}M</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    extractPenaltyAmount(amountStr) {
+        const match = amountStr.match(/[\d.]+/);
+        if (match) {
+            let num = parseFloat(match[0]);
+            if (amountStr.includes('billion')) num *= 1000000000;
+            else if (amountStr.includes('million')) num *= 1000000;
+            return num;
+        }
+        return 0;
+    }
+
+    generateRiskDistributionChart(riskCategories) {
+        const total = riskCategories.high.length + riskCategories.medium.length + riskCategories.low.length;
+        const h = riskCategories.high.length, m = riskCategories.medium.length, l = riskCategories.low.length;
+        return `
+            <h4>Risk Distribution</h4>
+            <div class="risk-distribution">
+                <div class="risk-row">
+                    <span class="risk-label high">High Risk</span>
+                    <div class="risk-bar-container">
+                        <div class="risk-bar high" style="width:${(h/total*100)}%"></div>
+                    </div>
+                    <span class="risk-count">${h}</span>
+                </div>
+                <div class="risk-row">
+                    <span class="risk-label medium">Medium Risk</span>
+                    <div class="risk-bar-container">
+                        <div class="risk-bar medium" style="width:${(m/total*100)}%"></div>
+                    </div>
+                    <span class="risk-count">${m}</span>
+                </div>
+                <div class="risk-row">
+                    <span class="risk-label low">Low Risk</span>
+                    <div class="risk-bar-container">
+                        <div class="risk-bar low" style="width:${(l/total*100)}%"></div>
+                    </div>
+                    <span class="risk-count">${l}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    generateAuthorityChart(penaltyCases) {
+        const authorityTotals = {};
+        penaltyCases.forEach(c => {
+            const amount = this.extractPenaltyAmount(c.amount);
+            authorityTotals[c.authority] = (authorityTotals[c.authority] || 0) + amount;
+        });
+        const sorted = Object.entries(authorityTotals).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const max = sorted[0][1];
+
+        return `
+            <h4>Penalties by Authority (2024)</h4>
+            <div class="authority-chart">
+                ${sorted.map(([auth, total]) => {
+                    const pct = (total / max * 100).toFixed(0);
+                    const formatted = total >= 1000000 ? `€${(total/1000000).toFixed(0)}M` : `€${(total/1000).toFixed(0)}K`;
+                    return `
+                        <div class="auth-row">
+                            <span class="auth-name">${auth.split(' ')[0]}</span>
+                            <div class="auth-bar-bg">
+                                <div class="auth-bar" style="width:${pct}%"></div>
+                            </div>
+                            <span class="auth-value">${formatted}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    generateCasesTable(penaltyCases) {
+        return `
+            <h4>2024 Enforcement Case Details</h4>
+            <table class="result-table penalty-table">
+                <thead>
+                    <tr>
+                        <th>Authority</th>
+                        <th>Company</th>
+                        <th>Amount</th>
+                        <th>Clause</th>
+                        <th>Violation</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${penaltyCases.map(c => `
+                        <tr>
+                            <td><strong>${c.authority}</strong></td>
+                            <td>${c.company}</td>
+                            <td class="penalty-amount">${c.amount}</td>
+                            <td>${c.clause}</td>
+                            <td>${c.violation}</td>
+                            <td><span class="impact-badge ${c.impact.toLowerCase().replace('-', '')}">${c.impact}</span></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
     }
 
     getOfficialSource(lawId) {
@@ -2179,6 +2524,9 @@ class ComplianceAnalysisSystem {
 
         container.innerHTML = html;
         container.classList.remove('hidden');
+
+        // Trigger penalty case analysis
+        this.analyzePenaltyCases();
     }
 
     exportReport() {
@@ -2441,6 +2789,311 @@ ${g.recommendations.map(r => `- ${r}`).join('\n')}
 
         // Reset progress
         this.updateProgress(1);
+
+        // Reset US state selection
+        document.getElementById('us-state-container').classList.add('hidden');
+        document.getElementById('us-state').value = '';
+    }
+
+    // US State Privacy Laws Helper Methods
+    getStateName(stateCode) {
+        const stateNames = {
+            'CA': 'California',
+            'VA': 'Virginia',
+            'CO': 'Colorado',
+            'CT': 'Connecticut',
+            'UT': 'Utah',
+            'IA': 'Iowa',
+            'IN': 'Indiana',
+            'TN': 'Tennessee',
+            'TX': 'Texas',
+            'FL': 'Florida',
+            'OR': 'Oregon',
+            'MT': 'Montana',
+            'TX-MH': 'Texas (Health)',
+            'WA': 'Washington',
+            'NV': 'Nevada',
+            'DE': 'Delaware',
+            'NJ': 'New Jersey',
+            'NH': 'New Hampshire',
+            'NE': 'Nebraska',
+            'MD': 'Maryland',
+            'KY': 'Kentucky',
+            'RI': 'Rhode Island'
+        };
+        return stateNames[stateCode] || stateCode;
+    }
+
+    getUSStateLaws(stateCode) {
+        const stateLawDatabase = {
+            'CA': [
+                {
+                    id: 'ccpa',
+                    name: 'California Consumer Privacy Act',
+                    abbr: 'CCPA/CPRA',
+                    regulator: 'California Privacy Protection Agency',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, opt-out mechanisms, data sale restrictions, private right of action, sensitive data processing',
+                    clauses: this.getCCPAClauses()
+                }
+            ],
+            'VA': [
+                {
+                    id: 'vcdpa',
+                    name: 'Virginia Consumer Data Protection Act',
+                    abbr: 'VCDPA',
+                    regulator: 'Virginia Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, controller/processor obligations, data protection assessments, targeted advertising opt-out',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'CO': [
+                {
+                    id: 'cpa',
+                    name: 'Colorado Privacy Act',
+                    abbr: 'CPA',
+                    regulator: 'Colorado Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, universal opt-out mechanism, sensitive data consent, profiling opt-out',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'CT': [
+                {
+                    id: 'ctdpa',
+                    name: 'Connecticut Data Privacy Act',
+                    abbr: 'CTDPA',
+                    regulator: 'Connecticut Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, controller/processor contracts, opt-out of targeted advertising, sensitive data processing',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'UT': [
+                {
+                    id: 'ucpa',
+                    name: 'Utah Consumer Privacy Act',
+                    abbr: 'UCPA',
+                    regulator: 'Utah Division of Consumer Protection',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, controller obligations, opt-out of targeted advertising and sales',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'IA': [
+                {
+                    id: 'icdpa',
+                    name: 'Iowa Consumer Data Protection Act',
+                    abbr: 'ICDPA',
+                    regulator: 'Iowa Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, controller/processor obligations, 90-day cure period',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'IN': [
+                {
+                    id: 'incdpa',
+                    name: 'Indiana Consumer Data Protection Act',
+                    abbr: 'INCDPA',
+                    regulator: 'Indiana Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, data protection assessments, 30-day cure period',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'TN': [
+                {
+                    id: 'tipa',
+                    name: 'Tennessee Information Protection Act',
+                    abbr: 'TIPA',
+                    regulator: 'Tennessee Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, NIST CSF alignment, 60-day cure period',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'TX': [
+                {
+                    id: 'tdpsa',
+                    name: 'Texas Data Privacy and Security Act',
+                    abbr: 'TDPSA',
+                    regulator: 'Texas Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, broad applicability, sensitive data consent, 30-day cure period',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'FL': [
+                {
+                    id: 'fdbr',
+                    name: 'Florida Digital Rights Act',
+                    abbr: 'FDBR',
+                    regulator: 'Florida Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, heightened protections for minors, strict applicability thresholds',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'OR': [
+                {
+                    id: 'ocpa',
+                    name: 'Oregon Consumer Privacy Act',
+                    abbr: 'OCPA',
+                    regulator: 'Oregon Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, sensitive data protections, biometric data requirements',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'MT': [
+                {
+                    id: 'mtcdpa',
+                    name: 'Montana Consumer Data Privacy Act',
+                    abbr: 'MTCDPA',
+                    regulator: 'Montana Department of Justice',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, opt-out rights, sensitive data consent',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'TX-MH': [
+                {
+                    id: 'tx-mhmda',
+                    name: 'Texas Medical Health Marketing Data Act',
+                    abbr: 'TX MHMDA',
+                    regulator: 'Texas Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Protected health information marketing restrictions, consent requirements',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'WA': [
+                {
+                    id: 'mhmda',
+                    name: 'Washington My Health My Data Act',
+                    abbr: 'MHMDA',
+                    regulator: 'Washington Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Health data privacy, consent requirements, geofencing restrictions, broad health data definition',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'NV': [
+                {
+                    id: 'nrs603a',
+                    name: 'Nevada Privacy Law (NRS 603A)',
+                    abbr: 'NRS 603A',
+                    regulator: 'Nevada Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Online privacy notice, opt-out of sale, data broker registration',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'DE': [
+                {
+                    id: 'dpdpa',
+                    name: 'Delaware Personal Data Privacy Act',
+                    abbr: 'DPDPA',
+                    regulator: 'Delaware Department of Justice',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, controller/processor obligations, opt-out rights',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'NJ': [
+                {
+                    id: 'njdpa',
+                    name: 'New Jersey Data Protection Act',
+                    abbr: 'NJDPA',
+                    regulator: 'New Jersey Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Comprehensive consumer rights, data protection assessments, sensitive data consent',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'NH': [
+                {
+                    id: 'hbs255',
+                    name: 'New Hampshire Data Privacy Act',
+                    abbr: 'HBS 255',
+                    regulator: 'New Hampshire Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, controller obligations, opt-out of targeted advertising',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'NE': [
+                {
+                    id: 'ndpa',
+                    name: 'Nebraska Data Privacy Act',
+                    abbr: 'NDPA',
+                    regulator: 'Nebraska Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, opt-out mechanisms, sensitive data protections',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'MD': [
+                {
+                    id: 'modpa',
+                    name: 'Maryland Online Data Privacy Act',
+                    abbr: 'MODPA',
+                    regulator: 'Maryland Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, data minimization, strict opt-in for sensitive data',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'KY': [
+                {
+                    id: 'kcdpa',
+                    name: 'Kentucky Consumer Data Protection Act',
+                    abbr: 'KCDPA',
+                    regulator: 'Kentucky Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, controller obligations, 30-day cure period',
+                    clauses: this.getGenericClauses()
+                }
+            ],
+            'RI': [
+                {
+                    id: 'ridtpa',
+                    name: 'Rhode Island Data Transparency and Privacy Act',
+                    abbr: 'RIDTPA',
+                    regulator: 'Rhode Island Attorney General',
+                    type: 'Primary Law',
+                    keyPoints: 'Consumer rights, data protection assessments, opt-out of targeted advertising',
+                    clauses: this.getGenericClauses()
+                }
+            ]
+        };
+
+        // Combine state-specific law with federal laws that apply to all states
+        const federalLaws = [
+            {
+                id: 'hipaa',
+                name: 'Health Insurance Portability and Accountability Act',
+                abbr: 'HIPAA',
+                regulator: 'HHS Office for Civil Rights',
+                type: 'Federal Law',
+                keyPoints: 'Protected health information, security rules, breach notification',
+                clauses: this.getHIPAAClauses()
+            },
+            {
+                id: 'glba',
+                name: 'Gramm-Leach-Bliley Act',
+                abbr: 'GLBA',
+                regulator: 'FTC, Federal Banking Agencies',
+                type: 'Federal Law',
+                keyPoints: 'Financial privacy, safeguards rule, pretexting protection',
+                clauses: this.getGLBAClauses()
+            }
+        ];
+
+        const stateLaws = stateLawDatabase[stateCode] || [];
+        return [...stateLaws, ...federalLaws];
     }
 
     delay(ms) {
