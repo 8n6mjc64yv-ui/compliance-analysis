@@ -1426,6 +1426,13 @@ class ComplianceAnalysisSystem {
         document.getElementById('export-report').addEventListener('click', () => this.exportReport());
         document.getElementById('reset-all').addEventListener('click', () => this.resetAll());
 
+        // Knowledge Base Panel
+        document.getElementById('toggle-kb').addEventListener('click', () => this.toggleKBPanel());
+        document.getElementById('close-kb').addEventListener('click', () => this.closeKBPanel());
+
+        // Initialize knowledge base
+        this.initKnowledgeBase();
+
         document.getElementById('law-select').addEventListener('change', (e) => {
             document.getElementById('analyze-clauses').disabled = !e.target.value;
         });
@@ -1442,20 +1449,138 @@ class ComplianceAnalysisSystem {
             }
         });
 
-        const gapInputs = [
+        // Yes/No radio button toggle functionality
+        document.querySelectorAll('.yesno-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const detailId = this.getAttribute('data-detail');
+                const detailDiv = document.getElementById(detailId);
+                const formGroup = this.closest('.yesno-group');
+                let completionIndicator = formGroup.querySelector('.completion-indicator');
+
+                // Create completion indicator if it doesn't exist
+                if (!completionIndicator) {
+                    completionIndicator = document.createElement('div');
+                    completionIndicator.className = 'completion-indicator';
+                    completionIndicator.innerHTML = '<span class="check-icon">&#10003;</span><span class="completion-text"></span>';
+                    formGroup.appendChild(completionIndicator);
+                }
+
+                const completionText = completionIndicator.querySelector('.completion-text');
+
+                if (detailDiv) {
+                    if (this.value === 'yes' && this.checked) {
+                        detailDiv.classList.remove('hidden');
+                        // For "yes", check if textarea has content
+                        const textarea = detailDiv.querySelector('textarea');
+                        if (textarea && textarea.value.trim()) {
+                            completionIndicator.classList.add('show');
+                            completionIndicator.classList.remove('no-input-required');
+                            completionText.textContent = 'Completed';
+                        } else {
+                            completionIndicator.classList.remove('show');
+                        }
+                    } else if (this.value === 'no' && this.checked) {
+                        detailDiv.classList.add('hidden');
+                        // Clear the textarea when No is selected
+                        const textarea = detailDiv.querySelector('textarea');
+                        if (textarea) textarea.value = '';
+                        // Show completion indicator for "no" - no additional input required
+                        completionIndicator.classList.add('show');
+                        completionIndicator.classList.add('no-input-required');
+                        completionText.textContent = 'Completed - No additional input required';
+                    }
+                } else {
+                    // For questions without detail sections, show completed when either option is selected
+                    if (this.checked) {
+                        completionIndicator.classList.add('show');
+                        if (this.value === 'no') {
+                            completionIndicator.classList.add('no-input-required');
+                            completionText.textContent = 'Completed - No additional input required';
+                        } else {
+                            completionIndicator.classList.remove('no-input-required');
+                            completionText.textContent = 'Completed';
+                        }
+                    }
+                }
+
+                // Update analyze-gaps button state
+                updateGapAnalysisButton();
+            });
+        });
+
+        // List of all Yes/No question groups
+        const yesNoGroups = [
             'org-structure', 'privacy-officer', 'privacy-certification', 'privacy-audit',
-            'internal-standards', 'data-classification', 'third-party-check', 'emergency-plan', 'disposal-records', 'periodic-pipia', 'rights-response-team', 'complaint-mechanism',
-            'pi-inventory', 'internal-transmission', 'third-party-sharing', 'access-control', 'display-obfuscation', 'deletion-mechanism',
-            'processing-logs', 'storage-location', 'storage-method', 'platform-type', 'data-sync', 'security-mechanisms', 'backup-status',
-            'collection-evaluation', 'processing-methods', 'privacy-policy', 'rights-response', 'pipia-results',
-            'third-party-sharing-circumstances', 'third-party-sharing-consent', 'recipient-supervision', 'recipient-contracts', 'internal-sharing-scenarios',
+            'internal-standards', 'data-classification', 'third-party-check', 'emergency-plan',
+            'disposal-records', 'periodic-pipia', 'rights-response-team', 'complaint-mechanism',
+            'pi-inventory', 'internal-transmission', 'third-party-sharing', 'access-control',
+            'display-obfuscation', 'deletion-mechanism', 'processing-logs', 'storage-location',
+            'storage-method', 'platform-type', 'data-sync', 'security-mechanisms', 'backup-status',
+            'collection-evaluation', 'processing-methods', 'privacy-policy', 'rights-response',
+            'pipia-results', 'third-party-sharing-main', 'third-party-consent',
+            'recipient-supervision', 'recipient-contracts', 'internal-sharing',
             'entrusted-pipia', 'entrusted-contracts', 'entrusted-supervision'
         ];
-        gapInputs.forEach(id => {
-            document.getElementById(id).addEventListener('input', () => {
-                const allFilled = gapInputs.every(inputId => document.getElementById(inputId).value.trim());
-                document.getElementById('analyze-gaps').disabled = !allFilled;
+
+        const updateGapAnalysisButton = () => {
+            const allAnswered = yesNoGroups.every(group => {
+                const radios = document.querySelectorAll(`input[name="${group}"]`);
+                const isChecked = Array.from(radios).some(r => r.checked);
+
+                // If Yes is selected, check if detail textarea is filled
+                const yesRadio = document.querySelector(`input[name="${group}"][value="yes"]`);
+                if (yesRadio && yesRadio.checked) {
+                    const detailId = yesRadio.getAttribute('data-detail');
+                    const textarea = document.querySelector(`#${detailId} textarea`);
+                    return textarea && textarea.value.trim();
+                }
+
+                return isChecked;
             });
+
+            document.getElementById('analyze-gaps').disabled = !allAnswered;
+        };
+
+        // Add change listeners to all Yes/No radios
+        yesNoGroups.forEach(group => {
+            const radios = document.querySelectorAll(`input[name="${group}"]`);
+            radios.forEach(radio => {
+                radio.addEventListener('change', updateGapAnalysisButton);
+            });
+
+            // Add input listeners to detail textareas
+            const yesRadio = document.querySelector(`input[name="${group}"][value="yes"]`);
+            if (yesRadio) {
+                const detailId = yesRadio.getAttribute('data-detail');
+                const textarea = document.querySelector(`#${detailId} textarea`);
+                if (textarea) {
+                    textarea.addEventListener('input', function() {
+                        const formGroup = yesRadio.closest('.yesno-group');
+                        let completionIndicator = formGroup.querySelector('.completion-indicator');
+
+                        // Create completion indicator if it doesn't exist
+                        if (!completionIndicator) {
+                            completionIndicator = document.createElement('div');
+                            completionIndicator.className = 'completion-indicator';
+                            completionIndicator.innerHTML = '<span class="check-icon">&#10003;</span><span class="completion-text"></span>';
+                            formGroup.appendChild(completionIndicator);
+                        }
+
+                        const completionText = completionIndicator.querySelector('.completion-text');
+
+                        // Show completion indicator if yes is selected and textarea has content
+                        if (yesRadio.checked && this.value.trim()) {
+                            completionIndicator.classList.add('show');
+                            completionIndicator.classList.remove('no-input-required');
+                            completionText.textContent = 'Completed';
+                        } else if (yesRadio.checked && !this.value.trim()) {
+                            completionIndicator.classList.remove('show');
+                        }
+
+                        updateGapAnalysisButton();
+                    });
+                }
+            }
         });
     }
 
@@ -2143,68 +2268,89 @@ class ComplianceAnalysisSystem {
 
     // Phase 3: Gap Analysis
     async phaseThree() {
-        // Collect all 14 fill-in-the-blank fields
-        const businessInfo = {
-            // Dimension 1: Organizational Compliance Design Status
-            orgStructure: document.getElementById('org-structure').value.trim(),
-            privacyOfficer: document.getElementById('privacy-officer').value.trim(),
-            privacyCertification: document.getElementById('privacy-certification').value.trim(),
-            privacyAudit: document.getElementById('privacy-audit').value.trim(),
-            internalStandards: document.getElementById('internal-standards').value.trim(),
-            dataClassification: document.getElementById('data-classification').value.trim(),
-            thirdPartyCheck: document.getElementById('third-party-check').value.trim(),
-            emergencyPlan: document.getElementById('emergency-plan').value.trim(),
-            disposalRecords: document.getElementById('disposal-records').value.trim(),
-            periodicPipia: document.getElementById('periodic-pipia').value.trim(),
-            rightsResponseTeam: document.getElementById('rights-response-team').value.trim(),
-            complaintMechanism: document.getElementById('complaint-mechanism').value.trim(),
+        // Helper function to collect Yes/No answers with details
+        const collectYesNoAnswer = (groupName) => {
+            const yesRadio = document.querySelector(`input[name="${groupName}"][value="yes"]:checked`);
+            const noRadio = document.querySelector(`input[name="${groupName}"][value="no"]:checked`);
 
-            // Dimension 2: System-Level Data Security Measures
-            piInventory: document.getElementById('pi-inventory').value.trim(),
-            internalTransmission: document.getElementById('internal-transmission').value.trim(),
-            thirdPartySharing: document.getElementById('third-party-sharing').value.trim(),
-            accessControl: document.getElementById('access-control').value.trim(),
-            displayObfuscation: document.getElementById('display-obfuscation').value.trim(),
-            deletionMechanism: document.getElementById('deletion-mechanism').value.trim(),
-            processingLogs: document.getElementById('processing-logs').value.trim(),
-            storageLocation: document.getElementById('storage-location').value.trim(),
-            storageMethod: document.getElementById('storage-method').value.trim(),
-            platformType: document.getElementById('platform-type').value.trim(),
-            dataSync: document.getElementById('data-sync').value.trim(),
-            securityMechanisms: document.getElementById('security-mechanisms').value.trim(),
-            backupStatus: document.getElementById('backup-status').value.trim(),
-
-            // Dimension 3: Business Process Design Status
-            collectionEvaluation: document.getElementById('collection-evaluation').value.trim(),
-            processingMethods: document.getElementById('processing-methods').value.trim(),
-            privacyPolicy: document.getElementById('privacy-policy').value.trim(),
-            rightsResponse: document.getElementById('rights-response').value.trim(),
-            pipiaResults: document.getElementById('pipia-results').value.trim(),
-            thirdPartySharingCircumstances: document.getElementById('third-party-sharing-circumstances').value.trim(),
-            thirdPartySharingConsent: document.getElementById('third-party-sharing-consent').value.trim(),
-            recipientSupervision: document.getElementById('recipient-supervision').value.trim(),
-            recipientContracts: document.getElementById('recipient-contracts').value.trim(),
-            internalSharingScenarios: document.getElementById('internal-sharing-scenarios').value.trim(),
-            entrustedPipia: document.getElementById('entrusted-pipia').value.trim(),
-            entrustedContracts: document.getElementById('entrusted-contracts').value.trim(),
-            entrustedSupervision: document.getElementById('entrusted-supervision').value.trim()
+            if (yesRadio) {
+                const detailId = yesRadio.getAttribute('data-detail');
+                const textarea = document.querySelector(`#${detailId} textarea`);
+                return {
+                    answer: 'Yes',
+                    details: textarea ? textarea.value.trim() : ''
+                };
+            } else if (noRadio) {
+                return {
+                    answer: 'No',
+                    details: 'Not applicable'
+                };
+            }
+            return { answer: '', details: '' };
         };
 
-        // Check if all fields are filled
-        const allFieldsFilled = Object.values(businessInfo).every(value => value.length > 0);
-        if (!allFieldsFilled) {
-            alert('Please fill in all company information fields.');
+        // Collect all Yes/No fields with their details
+        const businessInfo = {
+            // Dimension 1: Organizational Compliance Design Status
+            orgStructure: collectYesNoAnswer('org-structure'),
+            privacyOfficer: collectYesNoAnswer('privacy-officer'),
+            privacyCertification: collectYesNoAnswer('privacy-certification'),
+            privacyAudit: collectYesNoAnswer('privacy-audit'),
+            internalStandards: collectYesNoAnswer('internal-standards'),
+            dataClassification: collectYesNoAnswer('data-classification'),
+            thirdPartyCheck: collectYesNoAnswer('third-party-check'),
+            emergencyPlan: collectYesNoAnswer('emergency-plan'),
+            disposalRecords: collectYesNoAnswer('disposal-records'),
+            periodicPipia: collectYesNoAnswer('periodic-pipia'),
+            rightsResponseTeam: collectYesNoAnswer('rights-response-team'),
+            complaintMechanism: collectYesNoAnswer('complaint-mechanism'),
+
+            // Dimension 2: System-Level Data Security Measures
+            piInventory: collectYesNoAnswer('pi-inventory'),
+            internalTransmission: collectYesNoAnswer('internal-transmission'),
+            thirdPartySharing: collectYesNoAnswer('third-party-sharing'),
+            accessControl: collectYesNoAnswer('access-control'),
+            displayObfuscation: collectYesNoAnswer('display-obfuscation'),
+            deletionMechanism: collectYesNoAnswer('deletion-mechanism'),
+            processingLogs: collectYesNoAnswer('processing-logs'),
+            storageLocation: collectYesNoAnswer('storage-location'),
+            storageMethod: collectYesNoAnswer('storage-method'),
+            platformType: collectYesNoAnswer('platform-type'),
+            dataSync: collectYesNoAnswer('data-sync'),
+            securityMechanisms: collectYesNoAnswer('security-mechanisms'),
+            backupStatus: collectYesNoAnswer('backup-status'),
+
+            // Dimension 3: Business Process Design Status
+            collectionEvaluation: collectYesNoAnswer('collection-evaluation'),
+            processingMethods: collectYesNoAnswer('processing-methods'),
+            privacyPolicy: collectYesNoAnswer('privacy-policy'),
+            rightsResponse: collectYesNoAnswer('rights-response'),
+            pipiaResults: collectYesNoAnswer('pipia-results'),
+            thirdPartySharingMain: collectYesNoAnswer('third-party-sharing-main'),
+            thirdPartyConsent: collectYesNoAnswer('third-party-consent'),
+            recipientSupervision: collectYesNoAnswer('recipient-supervision'),
+            recipientContracts: collectYesNoAnswer('recipient-contracts'),
+            internalSharing: collectYesNoAnswer('internal-sharing'),
+            entrustedPipia: collectYesNoAnswer('entrusted-pipia'),
+            entrustedContracts: collectYesNoAnswer('entrusted-contracts'),
+            entrustedSupervision: collectYesNoAnswer('entrusted-supervision')
+        };
+
+        // Check if all fields are answered
+        const allFieldsAnswered = Object.values(businessInfo).every(value => value.answer !== '');
+        if (!allFieldsAnswered) {
+            alert('Please answer all questions.');
             return;
         }
 
         this.analysisData.businessInfo = businessInfo;
 
-        this.showLoading('gap-analysis agent generating compliance gap report...');
+        this.showLoading('gap-analysis agent generating compliance gap report with knowledge base references...');
 
         // Simulate gap analysis
         await this.delay(2500);
 
-        this.analysisData.gapReport = this.generateGapReport();
+        this.analysisData.gapReport = await this.generateGapReport();
         this.renderGapReport();
         this.hideLoading();
 
@@ -2212,21 +2358,21 @@ class ComplianceAnalysisSystem {
         document.getElementById('actions-bar').classList.remove('hidden');
     }
 
-    generateGapReport() {
+    async generateGapReport() {
         const gaps = [];
         const controlMatrix = this.analysisData.controlMatrix;
         const businessInfo = this.analysisData.businessInfo;
 
         // Analyze each control requirement
-        controlMatrix.forEach(control => {
-            const gap = this.analyzeGap(control, businessInfo);
+        for (const control of controlMatrix) {
+            const gap = await this.analyzeGap(control, businessInfo);
             gaps.push(gap);
-        });
+        }
 
         return gaps;
     }
 
-    analyzeGap(control, businessInfo) {
+    async analyzeGap(control, businessInfo) {
         // Analyze gap based on text inputs using keyword matching
         const domain = control.domain.toLowerCase();
         const requirement = control.requirement.toLowerCase();
@@ -2236,10 +2382,13 @@ class ComplianceAnalysisSystem {
         const securityKeywords = ['security', 'encrypt', 'access', 'control', 'safeguard', 'protection', 'firewall', 'mask', 'obfusc', 'deletion', 'anonymiz', 'storage'];
         const processKeywords = ['consent', 'notice', 'privacy policy', 'right', 'access', 'deletion', 'portability', 'piria', 'dpia', 'assessment', 'collection', 'purpose'];
 
+        // Helper to get text from Yes/No answer
+        const getAnswerText = (item) => item ? `${item.answer} ${item.details || ''}` : '';
+
         // Convert all business info to lowercase for analysis
-        const orgText = (businessInfo.orgStructure + ' ' + businessInfo.privacyOfficer + ' ' + businessInfo.privacyCertification + ' ' + businessInfo.privacyAudit + ' ' + businessInfo.internalStandards + ' ' + businessInfo.dataClassification + ' ' + businessInfo.thirdPartyCheck + ' ' + businessInfo.emergencyPlan + ' ' + businessInfo.disposalRecords + ' ' + businessInfo.periodicPipia + ' ' + businessInfo.rightsResponseTeam + ' ' + businessInfo.complaintMechanism).toLowerCase();
-        const securityText = (businessInfo.piInventory + ' ' + businessInfo.internalTransmission + ' ' + businessInfo.thirdPartySharing + ' ' + businessInfo.accessControl + ' ' + businessInfo.displayObfuscation + ' ' + businessInfo.deletionMechanism + ' ' + businessInfo.processingLogs + ' ' + businessInfo.storageLocation + ' ' + businessInfo.storageMethod + ' ' + businessInfo.platformType + ' ' + businessInfo.dataSync + ' ' + businessInfo.securityMechanisms + ' ' + businessInfo.backupStatus).toLowerCase();
-        const processText = (businessInfo.collectionEvaluation + ' ' + businessInfo.processingMethods + ' ' + businessInfo.privacyPolicy + ' ' + businessInfo.rightsResponse + ' ' + businessInfo.pipiaResults + ' ' + businessInfo.thirdPartySharingCircumstances + ' ' + businessInfo.thirdPartySharingConsent + ' ' + businessInfo.recipientSupervision + ' ' + businessInfo.recipientContracts + ' ' + businessInfo.internalSharingScenarios + ' ' + businessInfo.entrustedPipia + ' ' + businessInfo.entrustedContracts + ' ' + businessInfo.entrustedSupervision).toLowerCase();
+        const orgText = (getAnswerText(businessInfo.orgStructure) + ' ' + getAnswerText(businessInfo.privacyOfficer) + ' ' + getAnswerText(businessInfo.privacyCertification) + ' ' + getAnswerText(businessInfo.privacyAudit) + ' ' + getAnswerText(businessInfo.internalStandards) + ' ' + getAnswerText(businessInfo.dataClassification) + ' ' + getAnswerText(businessInfo.thirdPartyCheck) + ' ' + getAnswerText(businessInfo.emergencyPlan) + ' ' + getAnswerText(businessInfo.disposalRecords) + ' ' + getAnswerText(businessInfo.periodicPipia) + ' ' + getAnswerText(businessInfo.rightsResponseTeam) + ' ' + getAnswerText(businessInfo.complaintMechanism)).toLowerCase();
+        const securityText = (getAnswerText(businessInfo.piInventory) + ' ' + getAnswerText(businessInfo.internalTransmission) + ' ' + getAnswerText(businessInfo.thirdPartySharing) + ' ' + getAnswerText(businessInfo.accessControl) + ' ' + getAnswerText(businessInfo.displayObfuscation) + ' ' + getAnswerText(businessInfo.deletionMechanism) + ' ' + getAnswerText(businessInfo.processingLogs) + ' ' + getAnswerText(businessInfo.storageLocation) + ' ' + getAnswerText(businessInfo.storageMethod) + ' ' + getAnswerText(businessInfo.platformType) + ' ' + getAnswerText(businessInfo.dataSync) + ' ' + getAnswerText(businessInfo.securityMechanisms) + ' ' + getAnswerText(businessInfo.backupStatus)).toLowerCase();
+        const processText = (getAnswerText(businessInfo.collectionEvaluation) + ' ' + getAnswerText(businessInfo.processingMethods) + ' ' + getAnswerText(businessInfo.privacyPolicy) + ' ' + getAnswerText(businessInfo.rightsResponse) + ' ' + getAnswerText(businessInfo.pipiaResults) + ' ' + getAnswerText(businessInfo.thirdPartySharingMain) + ' ' + getAnswerText(businessInfo.thirdPartyConsent) + ' ' + getAnswerText(businessInfo.recipientSupervision) + ' ' + getAnswerText(businessInfo.recipientContracts) + ' ' + getAnswerText(businessInfo.internalSharing) + ' ' + getAnswerText(businessInfo.entrustedPipia) + ' ' + getAnswerText(businessInfo.entrustedContracts) + ' ' + getAnswerText(businessInfo.entrustedSupervision)).toLowerCase();
 
         // Calculate relevance scores based on keyword matching
         let orgScore = orgKeywords.filter(kw => orgText.includes(kw)).length;
@@ -2302,6 +2451,9 @@ class ComplianceAnalysisSystem {
             recommendations = this.generateRecommendations(control);
         }
 
+        // Search knowledge base for relevant references
+        const kbReferences = await this.searchKnowledgeBaseForGap(control, hasGap);
+
         return {
             clause: control.clause,
             domain: control.domain,
@@ -2313,8 +2465,44 @@ class ComplianceAnalysisSystem {
             riskLevel: this.calculateRiskLevel(likelihood, impact),
             recommendations: recommendations,
             penalty: control.penalty,
-            relevantScore: relevantScore
+            relevantScore: relevantScore,
+            kbReferences: kbReferences
         };
+    }
+
+    async searchKnowledgeBaseForGap(control, hasGap) {
+        if (!hasGap) return [];
+
+        try {
+            // Create search query based on control domain and requirement
+            const searchTerms = [
+                control.domain.toLowerCase(),
+                control.requirement.toLowerCase().split(' ').slice(0, 3).join(' ') // First 3 words
+            ];
+
+            // Add specific risk-related terms based on control type
+            if (control.domain.includes('security') || control.requirement.includes('breach')) {
+                searchTerms.push('data breach', 'incident response');
+            } else if (control.domain.includes('consent') || control.requirement.includes('consent')) {
+                searchTerms.push('consent', 'user rights');
+            } else if (control.domain.includes('rights') || control.requirement.includes('access')) {
+                searchTerms.push('data subject rights', 'access request');
+            } else if (control.domain.includes('transfer') || control.requirement.includes('transfer')) {
+                searchTerms.push('international transfer', 'data transfer');
+            }
+
+            const query = searchTerms.join(' ');
+
+            const response = await fetch(`/api/knowledge-base/search?query=${encodeURIComponent(query)}`);
+            if (response.ok) {
+                const results = await response.json();
+                return results.slice(0, 3); // Return top 3 relevant documents
+            }
+        } catch (error) {
+            console.error('Knowledge base search error:', error);
+        }
+
+        return [];
     }
 
     hasSpecificGap(control, orgText, securityText, processText) {
@@ -2407,14 +2595,689 @@ class ComplianceAnalysisSystem {
     }
 
     calculateRiskLevel(likelihood, impact) {
-        const matrix = {
-            'Very Low': { 'Low': 'Low', 'Medium': 'Low', 'High': 'Medium', 'Severe': 'Medium' },
-            'Low': { 'Low': 'Low', 'Medium': 'Medium', 'High': 'Medium', 'Severe': 'High' },
-            'Medium': { 'Low': 'Medium', 'Medium': 'Medium', 'High': 'High', 'Severe': 'High' },
-            'High': { 'Low': 'Medium', 'Medium': 'High', 'High': 'High', 'Severe': 'Severe' }
-        };
+        // Enhanced Risk Assessment with Numerical Scoring (from legal-super-skill)
+        // Severity: 1=Negligible, 2=Low, 3=Moderate, 4=High, 5=Critical
+        // Likelihood: 1=Remote, 2=Unlikely, 3=Possible, 4=Likely, 5=Almost Certain
+        const severityMap = { 'Negligible': 1, 'Low': 2, 'Moderate': 3, 'High': 4, 'Critical': 5, 'Severe': 5 };
+        const likelihoodMap = { 'Very Low': 1, 'Low': 2, 'Medium': 3, 'High': 4, 'Very High': 5 };
 
-        return matrix[likelihood]?.[impact] || 'Medium';
+        const s = severityMap[impact] || 3;
+        const l = likelihoodMap[likelihood] || 3;
+        const riskScore = s * l;
+
+        // Legal-Super-Skill Risk Matrix
+        if (riskScore >= 16) return 'Severe';      // RED - Immediate escalation
+        if (riskScore >= 10) return 'High';        // ORANGE - Escalate to senior counsel
+        if (riskScore >= 5) return 'Medium';       // YELLOW - Mitigate with owner
+        return 'Low';                              // GREEN - Accept and monitor
+    }
+
+    // Legal-Super-Skill: GREEN/YELLOW/RED Classification for Compliance Gaps
+    classifyComplianceGap(gap) {
+        // GREEN: Within acceptable range, aligns with standard
+        // YELLOW: Outside standard but negotiable/improvable
+        // RED: Outside acceptable range, material risk
+
+        if (!gap.hasGap) {
+            return {
+                classification: 'GREEN',
+                action: 'Note for awareness. No immediate action required.',
+                priority: 'Monitor'
+            };
+        }
+
+        if (gap.riskLevel === 'Severe' || gap.riskLevel === 'High') {
+            return {
+                classification: 'RED',
+                action: 'Explain specific risk. Provide market-standard alternative. Immediate escalation required.',
+                priority: 'Tier 1 - Must-Have',
+                escalation: true
+            };
+        }
+
+        if (gap.riskLevel === 'Medium') {
+            return {
+                classification: 'YELLOW',
+                action: 'Generate specific remediation plan. Provide fallback position.',
+                priority: 'Tier 2 - Should-Have',
+                escalation: false
+            };
+        }
+
+        return {
+            classification: 'GREEN',
+            action: 'Note for awareness. Periodic monitoring.',
+            priority: 'Tier 3 - Monitor',
+            escalation: false
+        };
+    }
+
+    // Legal-Super-Skill: Verification Checklist Framework
+    getVerificationChecklist() {
+        return {
+            gapAnalysis: [
+                'All material clauses analyzed against business information',
+                'Classifications are consistent with evidence',
+                'Risk levels include specific rationale',
+                'Recommendations are actionable and prioritized',
+                'Next steps have owners and deadlines',
+                'Penalty references are accurate and current'
+            ],
+            complianceReview: [
+                'Correct regulation identified for each clause',
+                'Deadline calculated from documented dates',
+                'Identity verification procedures confirmed',
+                'All systems and processes searched',
+                'Exemptions checked and documented',
+                'Denial cites specific regulatory provision'
+            ],
+            riskAssessment: [
+                'Severity and Likelihood rated independently',
+                'Risk score calculated correctly (S × L)',
+                'Risk level consistent with matrix',
+                'Multiple mitigation options provided',
+                'Residual risk stated explicitly',
+                'Monitoring plan with clear triggers',
+                'Next steps have owners and deadlines'
+            ],
+            redFlags: [
+                'Avoid: "should", "probably", "seems to", "I believe"',
+                'Verify: Never deliver without re-reading',
+                'Confirm: Calculate deadlines from source dates',
+                'Check: Cite provisions with current references',
+                'Validate: All business info inputs confirmed'
+            ]
+        };
+    }
+
+    // Legal-Super-Skill: Data Subject Request Handling Workflow
+    getDSRWorkflow() {
+        return {
+            step1: {
+                name: 'Intake and Identification',
+                actions: [
+                    'Identify request type (access, deletion, correction, portability, restriction, objection)',
+                    'Identify applicable regulation(s) (GDPR, CCPA/CPRA, LGPD, etc.)',
+                    'Verify requester identity',
+                    'Log immediately: Date received, Request type, Requester identity, Applicable regulation, Response deadline, Assigned handler'
+                ]
+            },
+            step2: {
+                name: 'Check Exemptions',
+                conditions: [
+                    'Active litigation hold',
+                    'Regulatory retention requirements',
+                    'Legal claims defense',
+                    'Third-party rights',
+                    'Archiving in public interest',
+                    'Freedom of expression'
+                ]
+            },
+            step3: {
+                name: 'Timeline Reference',
+                timelines: {
+                    'GDPR': { acknowledgment: 'Best practice', response: '30 days', extension: '+60 days' },
+                    'CCPA/CPRA': { acknowledgment: '10 business days', response: '45 calendar days', extension: '+45 days' },
+                    'UK GDPR': { acknowledgment: 'Best practice', response: '30 days', extension: '+60 days' },
+                    'LGPD': { acknowledgment: 'Best practice', response: '15 days', extension: 'Limited' }
+                }
+            }
+        };
+    }
+
+    // Legal-Super-Skill: Contract Review Methodology for DPA/Processing Agreements
+    getContractReviewMethodology() {
+        return {
+            limitationOfLiability: {
+                checkboxes: [
+                    'Cap amount defined',
+                    'Mutual or asymmetric cap identified',
+                    'Carveouts from the cap listed',
+                    'Consequential damages exclusion noted',
+                    'Exclusion is mutual',
+                    'Carveouts from exclusion identified',
+                    'Cap applies per-claim, per-year, or aggregate'
+                ]
+            },
+            indemnification: {
+                checkboxes: [
+                    'Mutual or unilateral determined',
+                    'Trigger scope defined',
+                    'Capped or uncapped identified',
+                    'Procedure documented',
+                    'Indemnitee mitigation obligation noted',
+                    'Relationship to limitation of liability assessed'
+                ]
+            },
+            dataProtection: {
+                checkboxes: [
+                    'DPA required and present',
+                    'Controller vs. processor classification',
+                    'Sub-processor rights defined',
+                    'Breach notification timeline (24-48 hours ideal)',
+                    'Cross-border transfer mechanisms',
+                    'Data deletion/return obligations',
+                    'Security requirements and audit rights',
+                    'Purpose limitation confirmed'
+                ]
+            },
+            termination: {
+                checkboxes: [
+                    'Initial and renewal terms',
+                    'Auto-renewal provisions',
+                    'Termination for convenience',
+                    'Termination for cause',
+                    'Effects of termination',
+                    'Wind-down period'
+                ]
+            }
+        };
+    }
+
+    // Legal-Super-Skill: Outside Counsel Engagement Criteria
+    getOutsideCounselCriteria() {
+        return {
+            mandatory: [
+                'Active litigation or arbitration',
+                'Government investigation or regulatory inquiry',
+                'Criminal exposure or allegations',
+                'Securities law issues',
+                'Board-level matters or shareholder disputes'
+            ],
+            stronglyRecommended: [
+                'Novel legal issues without precedent',
+                'Jurisdictional complexity (multi-country)',
+                'Material financial exposure (>5% of revenue)',
+                'Specialized expertise required (patent, antitrust)',
+                'M&A transactions or divestitures'
+            ],
+            consider: [
+                'Complex contract disputes',
+                'Employment claims from senior executives',
+                'Data breach incidents',
+                'IP infringement matters',
+                'Insurance coverage disputes'
+            ]
+        };
+    }
+
+    // Render Privacy Skills Section for Gap Report
+    renderPrivacySkillsSection() {
+        const portability = this.getDataPortabilityWorkflow();
+        const breach = this.getBreachNotificationWorkflow();
+        const consent = this.getConsentWithdrawalMechanism();
+        const dpia = this.getEnhancedDPIA();
+
+        return `
+            <h4>Privacy-Data-Protection-Skills Workflows</h4>
+            <div class="privacy-skills-section">
+                <div class="skill-tabs">
+                    <button class="skill-tab active" onclick="this.showSkillTab('portability')">Data Portability</button>
+                    <button class="skill-tab" onclick="this.showSkillTab('breach')">Breach Notification</button>
+                    <button class="skill-tab" onclick="this.showSkillTab('consent')">Consent Withdrawal</button>
+                    <button class="skill-tab" onclick="this.showSkillTab('dpia')">DPIA Methodology</button>
+                </div>
+
+                <div id="skill-portability" class="skill-content active">
+                    <h5>${portability.legalFoundation.article} Workflow</h5>
+                    <p><strong>Overview:</strong> ${portability.overview}</p>
+
+                    <div class="skill-subsection">
+                        <h6>Portable Data Scope</h6>
+                        <div class="two-column">
+                            <div class="include-list">
+                                <strong class="text-success">Include:</strong>
+                                <ul>${portability.portableData.include.map(i => `<li>${i}</li>`).join('')}</ul>
+                            </div>
+                            <div class="exclude-list">
+                                <strong class="text-danger">Exclude:</strong>
+                                <ul>${portability.portableData.exclude.map(i => `<li>${i}</li>`).join('')}</ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>7-Step Workflow</h6>
+                        <div class="workflow-steps">
+                            ${portability.workflow.map(step => `
+                                <div class="workflow-step">
+                                    <div class="step-number">${step.step}</div>
+                                    <div class="step-content">
+                                        <strong>${step.phase}</strong>
+                                        <ul>${step.actions ? step.actions.map(a => `<li>${a}</li>`).join('') : step.formats ? step.formats.map(f => `<li><strong>${f.format}:</strong> ${f.useCase}</li>`).join('') : step.methods ? step.methods.map(m => `<li>${m}</li>`).join('') : ''}</ul>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>Timeline</h6>
+                        <p><strong>Standard:</strong> ${portability.timeline.standard}</p>
+                        <p><strong>Extension:</strong> ${portability.timeline.extension}</p>
+                        <p><strong>Fee:</strong> ${portability.timeline.fee}</p>
+                    </div>
+                </div>
+
+                <div id="skill-breach" class="skill-content" style="display:none;">
+                    <h5>GDPR Article 33 Breach Notification Workflow</h5>
+                    <p><strong>Overview:</strong> ${breach.overview}</p>
+                    <p><strong>Trigger:</strong> ${breach.trigger}</p>
+                    <p><strong>Threshold:</strong> ${breach.notificationThreshold}</p>
+
+                    <div class="skill-subsection">
+                        <h6>Risk Scoring (6 Factors)</h6>
+                        <table class="skill-table">
+                            <thead><tr><th>Factor</th><th>Scale</th></tr></thead>
+                            <tbody>${breach.riskScoring.factors.map(f => `<tr><td>${f.factor}</td><td>${f.scale}</td></tr>`).join('')}</tbody>
+                        </table>
+                        <p><strong>Score 7+:</strong> ${breach.riskScoring.scoring[0].action}</p>
+                        <p><strong>Score 16+:</strong> ${breach.riskScoring.scoring[1].action}</p>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>Required Content (Art. 33(3))</h6>
+                        <ol>${breach.requiredContent.article33_3.map(item => `<li>${item}</li>`).join('')}</ol>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>Timeline</h6>
+                        <p><strong>Rule:</strong> ${breach.timeline.rule}</p>
+                        <p><strong>Note:</strong> ${breach.timeline.note}</p>
+                        <p><strong>Phased:</strong> ${breach.timeline.phased}</p>
+                    </div>
+                </div>
+
+                <div id="skill-consent" class="skill-content" style="display:none;">
+                    <h5>GDPR Article 7(3) Consent Withdrawal Mechanism</h5>
+                    <p><strong>Legal Requirement:</strong> ${consent.legalRequirement}</p>
+
+                    <div class="skill-subsection">
+                        <h6>One-Click Withdrawal Methods</h6>
+                        <table class="skill-table">
+                            <thead><tr><th>Method</th><th>Clicks</th><th>Path</th></tr></thead>
+                            <tbody>${consent.implementation.oneClickWithdrawal.map(m => `<tr><td>${m.method}</td><td>${m.clicks}</td><td>${m.path}</td></tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>Processing Pipeline</h6>
+                        <p><strong>Initial Response:</strong> ${consent.implementation.processingPipeline.initialResponse}</p>
+                        <p><strong>Cascading Effects:</strong> ${consent.implementation.processingPipeline.cascadingEffects}</p>
+                        <ul>${consent.implementation.processingPipeline.actions.map(a => `<li>${a}</li>`).join('')}</ul>
+                    </div>
+                </div>
+
+                <div id="skill-dpia" class="skill-content" style="display:none;">
+                    <h5>GDPR Article 35 DPIA Methodology</h5>
+                    <p><strong>Overview:</strong> ${dpia.overview}</p>
+
+                    <div class="skill-subsection">
+                        <h6>Mandatory Triggers (Art. 35(3))</h6>
+                        <ul>${dpia.mandatoryTriggers.article35_3.map(t => `<li>${t}</li>`).join('')}</ul>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>EDPB Nine Criteria</h6>
+                        <p>${dpia.mandatoryTriggers.edpbNineCriteria.description}</p>
+                        <ol>${dpia.mandatoryTriggers.edpbNineCriteria.criteria.map(c => `<li>${c}</li>`).join('')}</ol>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>7-Step DPIA Process</h6>
+                        <div class="workflow-steps">
+                            ${dpia.sevenStepProcess.map(step => `
+                                <div class="workflow-step">
+                                    <div class="step-number">${step.step}</div>
+                                    <div class="step-content">
+                                        <strong>${step.phase}</strong>
+                                        <p>Timeline: ${step.timeline}</p>
+                                        <p>Output: ${step.output}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>Common Deficiencies</h6>
+                        <ul>${dpia.commonDeficiencies.map(d => `<li>${d}</li>`).join('')}</ul>
+                    </div>
+
+                    <div class="skill-subsection">
+                        <h6>Enforcement Examples</h6>
+                        <table class="skill-table">
+                            <thead><tr><th>Case</th><th>Fine</th><th>Violation</th></tr></thead>
+                            <tbody>${dpia.enforcementExamples.map(e => `<tr><td>${e.case}</td><td>${e.fine}</td><td>${e.violation}</td></tr>`).join('')}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    showSkillTab(tabName) {
+        // Hide all skill contents
+        document.querySelectorAll('.skill-content').forEach(el => {
+            el.style.display = 'none';
+            el.classList.remove('active');
+        });
+        // Remove active class from all tabs
+        document.querySelectorAll('.skill-tab').forEach(el => {
+            el.classList.remove('active');
+        });
+        // Show selected tab content
+        document.getElementById('skill-' + tabName).style.display = 'block';
+        document.getElementById('skill-' + tabName).classList.add('active');
+        // Add active class to clicked tab
+        event.target.classList.add('active');
+    }
+
+    // ==========================================
+    // Privacy-Data-Protection-Skills Integration
+    // ==========================================
+
+    // Skill: Data Portability (GDPR Article 20)
+    getDataPortabilityWorkflow() {
+        return {
+            overview: 'Execute GDPR Article 20 data portability requests covering machine-readable format requirements and direct controller-to-controller transfers',
+            legalFoundation: {
+                article: 'GDPR Article 20',
+                requirements: [
+                    'Structured, commonly used, machine-readable format (JSON, CSV, XML)',
+                    'Transmit to another controller without hindrance',
+                    'Direct transfer where technically feasible (Art. 20(2))',
+                    'Must not adversely affect rights of others (Art. 20(3))'
+                ],
+                applicableLegalBases: ['Art. 6(1)(a) - Consent', 'Art. 6(1)(b) - Contract', 'Art. 9(2)(a) - Explicit consent'],
+                excludedLegalBases: ['Legal obligation', 'Vital interests', 'Public interest', 'Legitimate interests']
+            },
+            portableData: {
+                include: [
+                    'Data actively provided by data subject (account details, form submissions)',
+                    'Observed data from activity (search history, location data, activity logs)',
+                    'Raw sensor data from connected devices'
+                ],
+                exclude: [
+                    'Inferred or derived data (credit scores, profiling segments)',
+                    'Controller intellectual output from analysis',
+                    'Third-party personal data (must redact)',
+                    'Manual paper files'
+                ]
+            },
+            workflow: [
+                {
+                    step: 1,
+                    phase: 'Receive and Validate',
+                    actions: [
+                        'Log request with reference PORT-YYYY-NNNN',
+                        'Verify requester identity (tiered verification)',
+                        'Determine request type: (a) Self-export or (b) Direct transfer',
+                        'If direct transfer, obtain receiving controller details'
+                    ]
+                },
+                {
+                    step: 2,
+                    phase: 'Scope Assessment',
+                    actions: [
+                        'Identify all personal data subject provided or observed',
+                        'Filter by legal basis - only consent or contract',
+                        'Exclude inferred/derived data',
+                        'Redact third-party data (Art. 20(3))',
+                        'Confirm automated processing (exclude manual files)'
+                    ]
+                },
+                {
+                    step: 3,
+                    phase: 'Data Extraction',
+                    actions: [
+                        'Query customer account database',
+                        'Extract transaction/order history',
+                        'Collect user-generated content',
+                        'Gather service interaction logs',
+                        'De-duplicate across systems',
+                        'Validate data integrity (checksums)'
+                    ]
+                },
+                {
+                    step: 4,
+                    phase: 'Format the Data',
+                    formats: [
+                        { format: 'JSON', mime: 'application/json', useCase: 'Default - structured, widely supported' },
+                        { format: 'CSV', mime: 'text/csv', useCase: 'Tabular data, spreadsheet-compatible' },
+                        { format: 'XML', mime: 'application/xml', useCase: 'Enterprise integration, legacy systems' }
+                    ],
+                    packaging: [
+                        'Each category as separate file',
+                        'Manifest file listing files, counts, date ranges, checksums',
+                        'ZIP archive with AES-256 encryption'
+                    ]
+                },
+                {
+                    step: 5,
+                    phase: 'Execute Direct Transfer (if applicable)',
+                    methods: [
+                        'API transfer via HTTPS with mutual TLS',
+                        'SFTP with SSH key authentication',
+                        'Secure file exchange portal with time-limited access'
+                    ],
+                    note: 'If not technically feasible, provide data directly to subject per Art. 20(2)'
+                },
+                {
+                    step: 6,
+                    phase: 'Deliver to Data Subject',
+                    actions: [
+                        'Upload encrypted archive to secure portal',
+                        'Send notification with 72-hour expiry download link',
+                        'Send decryption password via separate channel',
+                        'Include manifest summary and instructions'
+                    ]
+                },
+                {
+                    step: 7,
+                    phase: 'Close and Document',
+                    actions: [
+                        'Update portability request register',
+                        'Record completion date, categories, format, transfer method',
+                        'Retain processing record for 3 years',
+                        'Note: Portability does NOT require deletion of original data'
+                    ]
+                }
+            ],
+            timeline: {
+                standard: '30 calendar days from receipt',
+                extension: 'Up to 60 additional days for complex requests (Art. 12(3))',
+                fee: 'First copy free; additional copies may incur reasonable fee (Art. 12(5))'
+            }
+        };
+    }
+
+    // Skill: Breach 72h Notification (GDPR Article 33)
+    getBreachNotificationWorkflow() {
+        return {
+            overview: 'Execute GDPR Article 33 breach notification to supervisory authority within 72 hours',
+            trigger: 'Clock starts when controller has "reasonable degree of certainty" of compromise',
+            notificationThreshold: 'Required unless breach "unlikely to result in risk to rights and freedoms"',
+            riskScoring: {
+                factors: [
+                    { factor: 'Data sensitivity', scale: '1-4' },
+                    { factor: 'Volume of data', scale: '1-4' },
+                    { factor: 'Identifiability', scale: '1-4' },
+                    { factor: 'Severity of consequences', scale: '1-4' },
+                    { factor: 'Vulnerable subjects', scale: '1-4' },
+                    { factor: 'Controller role', scale: '1-4' }
+                ],
+                scoring: [
+                    { range: 'Score 7+', action: 'Requires notification to supervisory authority' },
+                    { range: 'Score 16+', action: 'Also triggers data subject notification (Art. 34)' }
+                ]
+            },
+            requiredContent: {
+                article33_3: [
+                    'Nature of personal data breach (categories, approximate numbers)',
+                    'Categories and approximate number of data subjects concerned',
+                    'Categories and approximate number of personal data records concerned',
+                    'Name and contact details of DPO or contact point',
+                    'Likely consequences of the personal data breach',
+                    'Measures taken or proposed to address breach and mitigate risk'
+                ]
+            },
+            timeline: {
+                rule: '72 hours continuous including weekends/holidays',
+                note: '"Where feasible" deadline; delays require justification',
+                phased: 'Phased notification permitted when full details unavailable initially'
+            },
+            workflow: [
+                {
+                    phase: 'Hour 0-4: Immediate Response',
+                    actions: [
+                        'Confirm breach with "reasonable degree of certainty"',
+                        'Activate incident response team',
+                        'Begin containment measures',
+                        'Open breach register entry'
+                    ]
+                },
+                {
+                    phase: 'Hour 4-24: Assessment',
+                    actions: [
+                        'Calculate risk score (6 factors)',
+                        'Determine notification obligation',
+                        'Gather Art. 33(3) required information',
+                        'Draft initial notification if score 7+'
+                    ]
+                },
+                {
+                    phase: 'Hour 24-72: Notification',
+                    actions: [
+                        'Submit to supervisory authority via appropriate channel',
+                        'Online portals: BfDI (DE), CNIL (FR), ICO (UK), DPC (IE), AEPD (ES), AP (NL)',
+                        'PEC email: Garante (IT)',
+                        'Obtain submission confirmation'
+                    ]
+                },
+                {
+                    phase: 'Post-72h: Documentation',
+                    actions: [
+                        'Maintain breach register (Art. 33(5))',
+                        'Document justification for any delay',
+                        'Prepare data subject notification if score 16+',
+                        'Implement remediation measures'
+                    ]
+                }
+            ]
+        };
+    }
+
+    // Skill: Consent Withdrawal (GDPR Article 7(3))
+    getConsentWithdrawalMechanism() {
+        return {
+            overview: 'Implement GDPR Article 7(3) consent withdrawal with "equal ease" requirement',
+            legalRequirement: 'Withdrawing consent must be "as easy as to give it" - comparable effort in clicks, pages, fields, time, and cognitive load',
+            implementation: {
+                oneClickWithdrawal: [
+                    { method: 'Preference center', clicks: 2, path: 'Settings > Privacy > Withdraw Consent' },
+                    { method: 'Footer link "Privacy Choices"', clicks: 1, path: 'Direct to consent management' },
+                    { method: 'Email unsubscribe', clicks: 1, path: 'RFC 8058 one-click unsubscribe' },
+                    { method: 'Account dashboard', clicks: 2, path: 'Dashboard > Privacy widget' },
+                    { method: 'API endpoint', clicks: 'Programmatic', path: 'POST /consent/withdraw' }
+                ],
+                processingPipeline: {
+                    initialResponse: '100ms acknowledgment',
+                    cascadingEffects: 'Asynchronous within 1 hour',
+                    actions: [
+                        'Stop analytics collection',
+                        'Remove from marketing lists',
+                        'Notify third parties (Datalytics Partners, etc.)',
+                        'Update consent registry'
+                    ]
+                },
+                thirdPartyNotification: {
+                    format: 'Structured JSON payload',
+                    requirements: [
+                        'Acknowledgment required within 24 hours',
+                        'DPA-enforced deadlines: 4h acknowledgment, 24h cessation',
+                        'Escalation workflows for non-compliance'
+                    ]
+                }
+            },
+            reConsent: {
+                permitted: true,
+                requirements: [
+                    'Clear audit trails',
+                    'No dark patterns',
+                    'Fresh consent must be freely given, specific, informed, unambiguous'
+                ]
+            }
+        };
+    }
+
+    // Skill: Enhanced DPIA Methodology (GDPR Article 35)
+    getEnhancedDPIA() {
+        return {
+            overview: 'Conduct GDPR Data Protection Impact Assessment under Article 35 with EDPB WP248rev.01 methodology',
+            mandatoryTriggers: {
+                article35_3: [
+                    'Systematic profiling with significant effects',
+                    'Large-scale special category data',
+                    'Systematic large-scale public monitoring'
+                ],
+                edpbNineCriteria: {
+                    description: 'If 2+ criteria apply, DPIA is presumptively required',
+                    criteria: [
+                        'Evaluation/scoring (including profiling)',
+                        'Automated decision-making with legal/significant effect',
+                        'Systematic monitoring',
+                        'Sensitive data or data of a highly personal nature',
+                        'Large-scale processing',
+                        'Matching or combining datasets',
+                        'Vulnerable subjects (children, employees, vulnerable groups)',
+                        'Innovative use or application of new technology',
+                        'Processing preventing exercise of rights'
+                    ]
+                }
+            },
+            contentRequirements: {
+                article35_7: {
+                    mandatoryElements: [
+                        'Systematic description of processing (purposes, means)',
+                        'Necessity and proportionality assessment',
+                        'Risk assessment to rights and freedoms',
+                        'Mitigation measures, safeguards, security measures'
+                    ]
+                }
+            },
+            riskMatrix: {
+                likelihood: ['Remote', 'Unlikely', 'Possible', 'Likely', 'Almost Certain'],
+                severity: ['Negligible', 'Limited', 'Substantial', 'Severe', 'Very Severe'],
+                levels: ['Low', 'Medium', 'High', 'Very High']
+            },
+            sevenStepProcess: [
+                { step: 1, phase: 'Screening and Scoping', timeline: 'Week 1', output: 'DPIA initiation, criteria assessment' },
+                { step: 2, phase: 'Systematic Description', timeline: 'Week 2', output: 'Processing flow, data mapping' },
+                { step: 3, phase: 'Necessity and Proportionality Assessment', timeline: 'Week 3', output: 'Legal basis validation, necessity analysis' },
+                { step: 4, phase: 'Risk Identification and Assessment', timeline: 'Weeks 3-4', output: 'Risk register, impact assessment' },
+                { step: 5, phase: 'Mitigation Measures', timeline: 'Weeks 4-5', output: 'Technical/organizational measures, residual risk' },
+                { step: 6, phase: 'DPO Advice and Sign-Off', timeline: 'Weeks 5-6', output: 'DPO consultation, management approval' },
+                { step: 7, phase: 'Ongoing Review', timeline: 'Continuous', output: 'Periodic review, change-triggered updates' }
+            ],
+            keyCompliancePoints: [
+                'Controller shall seek advice of DPO where designated (Art. 35(2))',
+                'Controller shall seek views of data subjects where appropriate (Art. 35(9))',
+                'Residual high risk requires prior consultation with supervisory authority (Art. 36)'
+            ],
+            commonDeficiencies: [
+                'Generic risk descriptions',
+                'Missing proportionality analysis',
+                'No residual risk calculation',
+                'Undocumented DPO advice',
+                'Static DPIAs without review',
+                'Missing Art. 35(9) justification'
+            ],
+            enforcementExamples: [
+                { case: 'Karolinska Institute (2019)', fine: 'SEK 200,000', violation: 'Genetic data without DPIA' },
+                { case: 'Clearview AI (CNIL 2022)', fine: 'EUR 20 million', violation: 'Biometric processing without DPIA' }
+            ]
+        };
     }
 
     renderGapReport() {
@@ -2497,13 +3360,18 @@ class ComplianceAnalysisSystem {
 
         sortedGaps.forEach(gap => {
             const statusClass = gap.hasGap ? 'risk-' + gap.riskLevel.toLowerCase() : '';
+            const classification = this.classifyComplianceGap(gap);
+
             html += `
                 <div class="gap-card">
                     <div class="gap-card-header">
                         <div class="gap-card-title">
                             <strong>${gap.clause}</strong> - ${gap.domain}
                         </div>
-                        <span class="risk-badge ${statusClass}">${gap.hasGap ? gap.riskLevel : 'Compliant'}</span>
+                        <div class="gap-badges">
+                            <span class="risk-badge ${statusClass}">${gap.hasGap ? gap.riskLevel : 'Compliant'}</span>
+                            <span class="classification-badge classification-${classification.classification.toLowerCase()}">${classification.classification}</span>
+                        </div>
                     </div>
                     <div class="gap-card-body">
                         <p><strong>Requirement:</strong> ${gap.requirement}</p>
@@ -2512,10 +3380,27 @@ class ComplianceAnalysisSystem {
                         ${gap.hasGap ? `
                             <p><strong>Likelihood:</strong> ${gap.likelihood}</p>
                             <p><strong>Impact:</strong> ${gap.impact}</p>
+                            <div class="classification-box classification-${classification.classification.toLowerCase()}">
+                                <p><strong>Classification:</strong> ${classification.classification}</p>
+                                <p><strong>Priority:</strong> ${classification.priority}</p>
+                                <p><strong>Recommended Action:</strong> ${classification.action}</p>
+                            </div>
                             <p><strong>Recommendations:</strong></p>
                             <ul>
                                 ${gap.recommendations.map(r => `<li>${r}</li>`).join('')}
                             </ul>
+                            ${gap.kbReferences && gap.kbReferences.length > 0 ? `
+                                <p><strong>Knowledge Base References:</strong></p>
+                                <div class="kb-references">
+                                    ${gap.kbReferences.map(ref => `
+                                        <div class="kb-ref-item">
+                                            <strong>${ref.filename}</strong>
+                                            <div class="kb-ref-meta">Tags: ${ref.tags.join(', ') || 'None'}</div>
+                                            <div class="kb-ref-preview">${ref.content.substring(0, 200)}...</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
                         ` : '<p style="color: var(--secondary-color)"><strong>Status:</strong> No gap identified based on provided information</p>'}
                     </div>
                 </div>
@@ -2571,138 +3456,167 @@ ${this.analysisData.controlMatrix.map(c => `| ${c.clause} | ${c.domain} | ${c.re
 
 ### Dimension 1: Organizational Compliance Design Status
 
-**1) Current organizational structure and management methods for data security and privacy compliance in the parent and subsidiary companies:**
-${this.analysisData.businessInfo.orgStructure}
+**1) Does your organization have a data security and privacy compliance structure for parent and subsidiary companies?**
+- **Answer:** ${this.analysisData.businessInfo.orgStructure.answer}
+- **Details:** ${this.analysisData.businessInfo.orgStructure.details}
 
 **2) Status of the privacy protection management:**
 
-*Whether a dedicated data security and privacy protection officer has been appointed:*
-${this.analysisData.businessInfo.privacyOfficer}
+*Has a dedicated data security and privacy protection officer been appointed?*
+- **Answer:** ${this.analysisData.businessInfo.privacyOfficer.answer}
+- **Details:** ${this.analysisData.businessInfo.privacyOfficer.details}
 
-*Whether privacy protection qualification certification or information security-related certification has been obtained:*
-${this.analysisData.businessInfo.privacyCertification}
+*Has privacy protection or information security certification been obtained?*
+- **Answer:** ${this.analysisData.businessInfo.privacyCertification.answer}
+- **Details:** ${this.analysisData.businessInfo.privacyCertification.details}
 
-*Whether data processing activities have been audited and summarized:*
-${this.analysisData.businessInfo.privacyAudit}
+*Have data processing activities been audited and summarized?*
+- **Answer:** ${this.analysisData.businessInfo.privacyAudit.answer}
+- **Details:** ${this.analysisData.businessInfo.privacyAudit.details}
 
 **3) Related internal control management for data security and privacy protection:**
 
-*What are the relevant internal control management standards for privacy compliance (including data collection, data processing, data storage, data sharing, privacy disposal, and data transfer)?*
-${this.analysisData.businessInfo.internalStandards}
+*Are there internal control management standards for privacy compliance?*
+- **Answer:** ${this.analysisData.businessInfo.internalStandards.answer}
+- **Details:** ${this.analysisData.businessInfo.internalStandards.details}
 
-*Is data classified and graded for management according to the relevant systems, including management policies, classification methods, security levels, and access permissions for each type and grade of data?*
-${this.analysisData.businessInfo.dataClassification}
+*Is data classified and graded for management?*
+- **Answer:** ${this.analysisData.businessInfo.dataClassification.answer}
+- **Details:** ${this.analysisData.businessInfo.dataClassification.details}
 
-*In scenarios of data sharing/transfer/entrusted processing, is an external third-party data security and privacy protection check conducted?*
-${this.analysisData.businessInfo.thirdPartyCheck}
+*Is an external third-party data security check conducted?*
+- **Answer:** ${this.analysisData.businessInfo.thirdPartyCheck.answer}
+- **Details:** ${this.analysisData.businessInfo.thirdPartyCheck.details}
 
-*Has the company developed an emergency response plan for personal information security incidents?*
-${this.analysisData.businessInfo.emergencyPlan}
+*Has the company developed an emergency response plan?*
+- **Answer:** ${this.analysisData.businessInfo.emergencyPlan.answer}
+- **Details:** ${this.analysisData.businessInfo.emergencyPlan.details}
 
-*Are records maintained when performing data disposal activities?*
-${this.analysisData.businessInfo.disposalRecords}
+*Are records maintained for data disposal activities?*
+- **Answer:** ${this.analysisData.businessInfo.disposalRecords.answer}
+- **Details:** ${this.analysisData.businessInfo.disposalRecords.details}
 
-*Is a privacy impact assessment conducted periodically and are assessment reports generated (including frequency and scope), and are the assessment records and handling records retained?*
-${this.analysisData.businessInfo.periodicPipia}
+*Is a privacy impact assessment conducted periodically?*
+- **Answer:** ${this.analysisData.businessInfo.periodicPipia.answer}
+- **Details:** ${this.analysisData.businessInfo.periodicPipia.details}
 
-*Is there a response mechanism and corresponding team for personal information subject rights?*
-${this.analysisData.businessInfo.rightsResponseTeam}
+*Is there a response mechanism for personal information subject rights?*
+- **Answer:** ${this.analysisData.businessInfo.rightsResponseTeam.answer}
+- **Details:** ${this.analysisData.businessInfo.rightsResponseTeam.details}
 
-*Is a mechanism established to protect the exercise of personal information rights and a complaint mechanism?*
-${this.analysisData.businessInfo.complaintMechanism}
+*Is a complaint mechanism established?*
+- **Answer:** ${this.analysisData.businessInfo.complaintMechanism.answer}
+- **Details:** ${this.analysisData.businessInfo.complaintMechanism.details}
 
 ### Dimension 2: System-Level Data Security Measures
 
-**1) Collected Personal Information Fields, Quantity, and Collection Methods:**
-${this.analysisData.businessInfo.piInventory}
+**1) Do you maintain an inventory of collected personal information fields and collection methods?**
+- **Answer:** ${this.analysisData.businessInfo.piInventory.answer}
+- **Details:** ${this.analysisData.businessInfo.piInventory.details}
 
-**2) Internal System Transmission Status:**
-${this.analysisData.businessInfo.internalTransmission}
+**2) Is there a secure internal system transmission mechanism?**
+- **Answer:** ${this.analysisData.businessInfo.internalTransmission.answer}
+- **Details:** ${this.analysisData.businessInfo.internalTransmission.details}
 
-**3) External Third-Party Sharing/Commissioned Processing:**
-${this.analysisData.businessInfo.thirdPartySharing}
+**3) Is there external third-party sharing or commissioned processing?**
+- **Answer:** ${this.analysisData.businessInfo.thirdPartySharing.answer}
+- **Details:** ${this.analysisData.businessInfo.thirdPartySharing.details}
 
-**4) Access Control Status:**
-${this.analysisData.businessInfo.accessControl}
+**4) Is access control implemented?**
+- **Answer:** ${this.analysisData.businessInfo.accessControl.answer}
+- **Details:** ${this.analysisData.businessInfo.accessControl.details}
 
-**5) Obfuscation in Display:**
-${this.analysisData.businessInfo.displayObfuscation}
+**5) Is obfuscation/masking used in data display?**
+- **Answer:** ${this.analysisData.businessInfo.displayObfuscation.answer}
+- **Details:** ${this.analysisData.businessInfo.displayObfuscation.details}
 
-**6) Deletion/Anonymization Mechanisms:**
-${this.analysisData.businessInfo.deletionMechanism}
+**6) Are deletion/anonymization mechanisms in place?**
+- **Answer:** ${this.analysisData.businessInfo.deletionMechanism.answer}
+- **Details:** ${this.analysisData.businessInfo.deletionMechanism.details}
 
-**7) Methods and Retention Period for Personal Information Processing Logs:**
-${this.analysisData.businessInfo.processingLogs}
+**7) Are personal information processing logs maintained?**
+- **Answer:** ${this.analysisData.businessInfo.processingLogs.answer}
+- **Details:** ${this.analysisData.businessInfo.processingLogs.details}
 
 **8) Data Storage Location and Security Mechanisms:**
 
-*Data storage location and location of the data center:*
-${this.analysisData.businessInfo.storageLocation}
+*Do you maintain a record of data storage location and data center location?*
+- **Answer:** ${this.analysisData.businessInfo.storageLocation.answer}
+- **Details:** ${this.analysisData.businessInfo.storageLocation.details}
 
-*Storage method (offline storage/cloud server storage):*
-${this.analysisData.businessInfo.storageMethod}
+*Is storage method documented (offline/cloud)?*
+- **Answer:** ${this.analysisData.businessInfo.storageMethod.answer}
+- **Details:** ${this.analysisData.businessInfo.storageMethod.details}
 
-*Whether the platform is self-built or uses third-party cloud services:*
-${this.analysisData.businessInfo.platformType}
+*Is platform type documented (self-built or third-party cloud)?*
+- **Answer:** ${this.analysisData.businessInfo.platformType.answer}
+- **Details:** ${this.analysisData.businessInfo.platformType.details}
 
-*Whether synchronization with other data centers is involved:*
-${this.analysisData.businessInfo.dataSync}
+*Is data center synchronization documented?*
+- **Answer:** ${this.analysisData.businessInfo.dataSync.answer}
+- **Details:** ${this.analysisData.businessInfo.dataSync.details}
 
-*Data security mechanisms (encryption measures, isolated storage, etc.):*
-${this.analysisData.businessInfo.securityMechanisms}
+*Are data security mechanisms documented?*
+- **Answer:** ${this.analysisData.businessInfo.securityMechanisms.answer}
+- **Details:** ${this.analysisData.businessInfo.securityMechanisms.details}
 
-*Whether data is backed up, and backup storage location:*
-${this.analysisData.businessInfo.backupStatus}
+*Is data backup documented?*
+- **Answer:** ${this.analysisData.businessInfo.backupStatus.answer}
+- **Details:** ${this.analysisData.businessInfo.backupStatus.details}
 
 ### Dimension 3: Business Process Design Status
 
-**1) Evaluation of Collection Purposes, Legality, Necessity, and Minimal Scope:**
-${this.analysisData.businessInfo.collectionEvaluation}
+**1) Has an evaluation of collection purposes, legality, necessity, and minimal scope been conducted?**
+- **Answer:** ${this.analysisData.businessInfo.collectionEvaluation.answer}
+- **Details:** ${this.analysisData.businessInfo.collectionEvaluation.details}
 
-**2) Data Processing Methods:**
-${this.analysisData.businessInfo.processingMethods}
+**2) Are data processing methods documented?**
+- **Answer:** ${this.analysisData.businessInfo.processingMethods.answer}
+- **Details:** ${this.analysisData.businessInfo.processingMethods.details}
 
-**3) Privacy Policy Configuration:**
-${this.analysisData.businessInfo.privacyPolicy}
+**3) Is privacy policy configuration complete?**
+- **Answer:** ${this.analysisData.businessInfo.privacyPolicy.answer}
+- **Details:** ${this.analysisData.businessInfo.privacyPolicy.details}
 
-**4) User Rights Response Methods:**
-${this.analysisData.businessInfo.rightsResponse}
+**4) Are user rights response methods established?**
+- **Answer:** ${this.analysisData.businessInfo.rightsResponse.answer}
+- **Details:** ${this.analysisData.businessInfo.rightsResponse.details}
 
-**5) Personal Information Protection Impact Assessment (PIPIA) Results:**
-${this.analysisData.businessInfo.pipiaResults}
+**5) Have Personal Information Protection Impact Assessments (PIPIA) been conducted?**
+- **Answer:** ${this.analysisData.businessInfo.pipiaResults.answer}
+- **Details:** ${this.analysisData.businessInfo.pipiaResults.details}
 
-**6) Do you share, provide, sell, authorize the use of, or publicly disclose personal information to third parties?**
+**6) Do you share personal information to third parties?**
+- **Answer:** ${this.analysisData.businessInfo.thirdPartySharingMain.answer}
+- **Details:** ${this.analysisData.businessInfo.thirdPartySharingMain.details}
 
-*If yes, please describe the specific circumstances (e.g., marketing and promotion), including the types and purposes of the data being shared, provided, or disclosed:*
-${this.analysisData.businessInfo.thirdPartySharingCircumstances}
+*Have you obtained consent for third-party sharing?*
+- **Answer:** ${this.analysisData.businessInfo.thirdPartyConsent.answer}
+- **Details:** ${this.analysisData.businessInfo.thirdPartyConsent.details}
 
-*Have you obtained consent from the individual whose personal information is involved or from the data provider?*
-${this.analysisData.businessInfo.thirdPartySharingConsent}
+**7) Do you supervise the data processing activities of data recipients?**
+- **Answer:** ${this.analysisData.businessInfo.recipientSupervision.answer}
+- **Details:** ${this.analysisData.businessInfo.recipientSupervision.details}
 
-**7) Please clarify whether you supervise the data processing activities of the data recipients.**
+**8) Do you sign contracts with recipients stipulating purpose, duration, protective measures, and obligations?**
+- **Answer:** ${this.analysisData.businessInfo.recipientContracts.answer}
+- **Details:** ${this.analysisData.businessInfo.recipientContracts.details}
 
-${this.analysisData.businessInfo.recipientSupervision}
+**9) Are there scenarios of internal sharing (subsidiaries, affiliated companies)?**
+- **Answer:** ${this.analysisData.businessInfo.internalSharing.answer}
+- **Details:** ${this.analysisData.businessInfo.internalSharing.details}
 
-**8) Do you sign contracts with the recipients to stipulate the purpose, duration, method of processing shared data, types of personal information, protective measures, and the rights and obligations of both parties?**
+**10) Do you conduct PIPIA before entrusting others to process personal information?**
+- **Answer:** ${this.analysisData.businessInfo.entrustedPipia.answer}
+- **Details:** ${this.analysisData.businessInfo.entrustedPipia.details}
 
-${this.analysisData.businessInfo.recipientContracts}
+**11) Do you sign contracts with entrusted parties stipulating purpose, duration, protective measures, and obligations?**
+- **Answer:** ${this.analysisData.businessInfo.entrustedContracts.answer}
+- **Details:** ${this.analysisData.businessInfo.entrustedContracts.details}
 
-**9) Please clarify scenarios of internal sharing (e.g., subsidiaries, affiliated companies, etc.).**
-
-*If any, explain the business purpose of the transfer, whether the data transfer is complete or partial, and the systems involved:*
-${this.analysisData.businessInfo.internalSharingScenarios}
-
-**10) Before entrusting others to process personal information, do you conduct a personal information protection impact assessment?**
-
-${this.analysisData.businessInfo.entrustedPipia}
-
-**11) Do you sign contracts with the entrusted parties to stipulate the purpose, duration, method of processing, types of personal information, protective measures, and the rights and obligations of both parties?**
-
-${this.analysisData.businessInfo.entrustedContracts}
-
-**12) Do you supervise the personal information processing activities of the entrusted parties?**
-
-${this.analysisData.businessInfo.entrustedSupervision}
+**12) Do you supervise the personal information processing activities of entrusted parties?**
+- **Answer:** ${this.analysisData.businessInfo.entrustedSupervision.answer}
+- **Details:** ${this.analysisData.businessInfo.entrustedSupervision.details}
 
 ## Phase Three: Gap Analysis Report
 
@@ -2758,19 +3672,38 @@ ${g.recommendations.map(r => `- ${r}`).join('\n')}
         document.getElementById('country').value = '';
         document.getElementById('law-select').innerHTML = '<option value="">Select a Law</option>';
 
-        // Reset all gap analysis fields
-        const gapFields = [
+        // Reset all Yes/No radio buttons and detail textareas
+        const yesNoGroups = [
             'org-structure', 'privacy-officer', 'privacy-certification', 'privacy-audit',
-            'internal-standards', 'data-classification', 'third-party-check', 'emergency-plan', 'disposal-records', 'periodic-pipia', 'rights-response-team', 'complaint-mechanism',
-            'pi-inventory', 'internal-transmission', 'third-party-sharing', 'access-control', 'display-obfuscation', 'deletion-mechanism',
-            'processing-logs', 'storage-location', 'storage-method', 'platform-type', 'data-sync', 'security-mechanisms', 'backup-status',
-            'collection-evaluation', 'processing-methods', 'privacy-policy', 'rights-response', 'pipia-results',
-            'third-party-sharing-circumstances', 'third-party-sharing-consent', 'recipient-supervision', 'recipient-contracts', 'internal-sharing-scenarios',
+            'internal-standards', 'data-classification', 'third-party-check', 'emergency-plan',
+            'disposal-records', 'periodic-pipia', 'rights-response-team', 'complaint-mechanism',
+            'pi-inventory', 'internal-transmission', 'third-party-sharing', 'access-control',
+            'display-obfuscation', 'deletion-mechanism', 'processing-logs', 'storage-location',
+            'storage-method', 'platform-type', 'data-sync', 'security-mechanisms', 'backup-status',
+            'collection-evaluation', 'processing-methods', 'privacy-policy', 'rights-response',
+            'pipia-results', 'third-party-sharing-main', 'third-party-consent',
+            'recipient-supervision', 'recipient-contracts', 'internal-sharing',
             'entrusted-pipia', 'entrusted-contracts', 'entrusted-supervision'
         ];
-        gapFields.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
+
+        yesNoGroups.forEach(group => {
+            // Uncheck all radios in this group
+            const radios = document.querySelectorAll(`input[name="${group}"]`);
+            radios.forEach(radio => {
+                radio.checked = false;
+            });
+
+            // Hide detail sections and clear textareas
+            const yesRadio = document.querySelector(`input[name="${group}"][value="yes"]`);
+            if (yesRadio) {
+                const detailId = yesRadio.getAttribute('data-detail');
+                const detailDiv = document.getElementById(detailId);
+                if (detailDiv) {
+                    detailDiv.classList.add('hidden');
+                    const textarea = detailDiv.querySelector('textarea');
+                    if (textarea) textarea.value = '';
+                }
+            }
         });
 
         // Reset results
@@ -3098,6 +4031,821 @@ ${g.recommendations.map(r => `- ${r}`).join('\n')}
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ==========================================
+    // Claude API Integration
+    // From: https://github.com/anthropics/skills/tree/main/skills/claude-api
+    // ==========================================
+
+    // Claude API Configuration
+    getClaudeAPIConfig() {
+        return {
+            model: 'claude-opus-4-7',
+            maxTokens: 16000,
+            thinking: { type: 'adaptive' },
+            outputConfig: { effort: 'xhigh' }
+        };
+    }
+
+    // Document Processing with Files API Pattern
+    getFilesAPIPatterns() {
+        return {
+            uploadPattern: `
+// Upload document
+const uploaded = await client.beta.files.upload(
+    file: ("document.pdf", open("document.pdf", "rb"), "application/pdf")
+);`,
+            documentReferencePattern: `
+// Reference uploaded document in message
+{
+    "type": "document",
+    "source": {"type": "file", "file_id": uploaded.id},
+    "title": "Compliance Document",
+    "citations": {"enabled": true}
+}`,
+            betaHeader: 'files-api-2025-04-14',
+            managementOperations: [
+                'client.beta.files.list() — list all files',
+                'client.beta.files.retrieve_metadata(file_id) — get metadata',
+                'client.beta.files.delete(file_id) — remove file'
+            ]
+        };
+    }
+
+    // Personal Knowledge Base System
+    getKnowledgeBaseSystem() {
+        return {
+            architecture: {
+                description: 'Stateless API with full conversation history sent each time',
+                cachingStrategy: 'Prefix-match caching with cache_control breakpoints',
+                storage: 'Persistent storage for document metadata and embeddings'
+            },
+            cachingStrategy: {
+                description: 'Keep stable content first, volatile content after last breakpoint',
+                renderOrder: 'tools → system → messages',
+                maxBreakpoints: 4,
+                minTokens: 1024,
+                verification: 'Check usage.cache_read_input_tokens — zero means silent invalidation',
+                pattern: `
+// Manual cache control
+{
+    "type": "text",
+    "text": "Stable system prompt...",
+    "cache_control": {"type": "ephemeral"}
+}`
+            },
+            documentProcessing: {
+                supportedFormats: [
+                    { format: 'PDF', type: 'document', mediaType: 'application/pdf' },
+                    { format: 'TXT', type: 'document', mediaType: 'text/plain' },
+                    { format: 'MD', type: 'document', mediaType: 'text/markdown' },
+                    { format: 'JSON', type: 'document', mediaType: 'application/json' },
+                    { format: 'PNG', type: 'image', mediaType: 'image/png' },
+                    { format: 'JPG', type: 'image', mediaType: 'image/jpeg' }
+                ],
+                base64Pattern: `
+// Base64 document encoding
+import base64
+with open("document.pdf", "rb") as f:
+    doc_data = base64.standard_b64encode(f.read()).decode("utf-8")
+
+{
+    "type": "document",
+    "source": {
+        "type": "base64",
+        "media_type": "application/pdf",
+        "data": doc_data
+    }
+}`
+            },
+            conversationManagement: {
+                pattern: `
+class KnowledgeBaseManager:
+    def __init__(self, client, model, system=None):
+        self.client = client
+        self.model = model
+        self.system = system
+        self.messages = []
+        self.documents = {}  # file_id -> metadata
+
+    async def process_document(self, file_path, title):
+        # Upload document
+        uploaded = await self.client.beta.files.upload(
+            file=(file_path, open(file_path, "rb"), "application/pdf")
+        )
+
+        # Store metadata
+        self.documents[uploaded.id] = {
+            "title": title,
+            "file_id": uploaded.id,
+            "uploaded_at": datetime.now()
+        }
+
+        return uploaded.id
+
+    async def query(self, question, document_ids=None):
+        content = [{"type": "text", "text": question}]
+
+        # Add document references if specified
+        if document_ids:
+            for doc_id in document_ids:
+                content.append({
+                    "type": "document",
+                    "source": {"type": "file", "file_id": doc_id},
+                    "citations": {"enabled": True}
+                })
+
+        self.messages.append({"role": "user", "content": content})
+
+        response = await self.client.messages.create(
+            model=self.model,
+            max_tokens=16000,
+            system=self.system,
+            messages=self.messages
+        )
+
+        assistant_msg = next(
+            (b.text for b in response.content if b.type == "text"), ""
+        )
+        self.messages.append({"role": "assistant", "content": assistant_msg})
+
+        return assistant_msg`
+            }
+        };
+    }
+
+    // Enhanced Risk Assessment with Claude API Analysis
+    getEnhancedRiskAssessment() {
+        return {
+            description: 'Multi-dimensional risk assessment using Claude API for intelligent analysis',
+            methodology: {
+                tier1_singleCall: 'Classification, summarization, extraction, Q&A',
+                tier2_workflow: 'Multi-step with code-controlled logic',
+                tier3_agent: 'Model-driven exploration with tool use'
+            },
+            riskAnalysisPrompt: `
+You are an expert compliance risk assessor. Analyze the following gap data and provide:
+
+1. Risk Classification (GREEN/YELLOW/RED)
+2. Specific risk scenarios that could occur
+3. Likelihood assessment with justification
+4. Impact severity assessment
+5. Recommended mitigation strategies
+6. Priority ranking
+
+Gap Data:
+- Clause: {{clause}}
+- Domain: {{domain}}
+- Requirement: {{requirement}}
+- Current Status: {{status}}
+- Business Context: {{context}}
+
+Output in JSON format:
+{
+    "classification": "GREEN|YELLOW|RED",
+    "risk_scenarios": ["scenario1", "scenario2"],
+    "likelihood": "Low|Medium|High",
+    "likelihood_rationale": "explanation",
+    "impact": "Negligible|Limited|Substantial|Severe|Very Severe",
+    "impact_rationale": "explanation",
+    "mitigation_strategies": ["strategy1", "strategy2"],
+    "priority": 1-10,
+    "escalation_required": true|false,
+    "recommended_timeline": "immediate|30_days|90_days"
+}`,
+            structuredOutput: {
+                pattern: `
+// Use output_config for structured responses
+response = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=16000,
+    output_config={
+        "format": {
+            "type": "json",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "risk_level": {"type": "string", "enum": ["Low", "Medium", "High"]},
+                    "classification": {"type": "string", "enum": ["GREEN", "YELLOW", "RED"]},
+                    "mitigation_strategies": {"type": "array", "items": {"type": "string"}},
+                    "priority": {"type": "integer", "minimum": 1, "maximum": 10}
+                },
+                "required": ["risk_level", "classification", "mitigation_strategies", "priority"]
+            }
+        }
+    },
+    messages=[{"role": "user", "content": risk_analysis_prompt}]
+)
+
+// Or use parse() for automatic validation
+result = client.messages.parse(
+    model="claude-opus-4-7",
+    max_tokens=16000,
+    messages=[{"role": "user", "content": prompt}],
+    response_format=RiskAssessmentSchema
+)`
+            },
+            multiDocumentAnalysis: {
+                description: 'Analyze multiple compliance documents simultaneously',
+                pattern: `
+// Upload multiple compliance documents
+const documents = [
+    await client.beta.files.upload(file=("policy1.pdf", ...)),
+    await client.beta.files.upload(file=("policy2.pdf", ...)),
+    await client.beta.files.upload(file=("audit_report.pdf", ...))
+];
+
+// Query across all documents
+response = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=16000,
+    betas=["files-api-2025-04-14"],
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "Compare these compliance documents and identify gaps:"},
+            ...documents.map(doc => ({
+                "type": "document",
+                "source": {"type": "file", "file_id": doc.id},
+                "citations": {"enabled": True}
+            }))
+        ]
+    }]
+)`,
+                useCases: [
+                    'Cross-reference policies against regulations',
+                    'Compare vendor DPAs with internal standards',
+                    'Analyze audit reports against control matrices',
+                    'Review incident reports for patterns'
+                ]
+            }
+        };
+    }
+
+    // Tool Use Patterns for Compliance Analysis
+    getComplianceTools() {
+        return {
+            description: 'Define tools for the Claude API to use in compliance analysis',
+            tools: [
+                {
+                    name: 'search_regulation',
+                    description: 'Search for specific regulation text or guidance',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            regulation: { type: 'string', description: 'e.g., GDPR, CCPA' },
+                            article: { type: 'string', description: 'Article number or section' },
+                            topic: { type: 'string', description: 'Specific topic to search' }
+                        },
+                        required: ['regulation', 'topic']
+                    }
+                },
+                {
+                    name: 'calculate_deadline',
+                    description: 'Calculate regulatory response deadlines',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            start_date: { type: 'string', format: 'date' },
+                            regulation: { type: 'string' },
+                            request_type: { type: 'string', enum: ['dsar', 'breach_notification', 'portability'] }
+                        },
+                        required: ['start_date', 'regulation', 'request_type']
+                    }
+                },
+                {
+                    name: 'assess_risk',
+                    description: 'Calculate risk score using severity × likelihood',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            severity: { type: 'integer', minimum: 1, maximum: 5 },
+                            likelihood: { type: 'integer', minimum: 1, maximum: 5 },
+                            factors: { type: 'array', items: { type: 'string' } }
+                        },
+                        required: ['severity', 'likelihood']
+                    }
+                },
+                {
+                    name: 'generate_remediation_plan',
+                    description: 'Generate specific remediation steps',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            gap_type: { type: 'string' },
+                            priority: { type: 'string', enum: ['high', 'medium', 'low'] },
+                            resources: { type: 'array', items: { type: 'string' } }
+                        },
+                        required: ['gap_type', 'priority']
+                    }
+                }
+            ],
+            toolUsePattern: `
+// Tool use for automated compliance analysis
+response = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=16000,
+    tools=compliance_tools,
+    messages=[{
+        "role": "user",
+        "content": "Analyze this gap and use appropriate tools to generate recommendations"
+    }]
+)
+
+// Check for tool calls
+for block in response.content:
+    if block.type == "tool_use":
+        # Execute tool
+        result = execute_tool(block.name, block.input)
+
+        # Return result to continue conversation
+        follow_up = client.messages.create(
+            model="claude-opus-4-7",
+            max_tokens=16000,
+            tools=compliance_tools,
+            messages=[
+                {"role": "user", "content": "Analyze this gap..."},
+                {"role": "assistant", "content": response.content},
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": json.dumps(result)
+                        }
+                    ]
+                }
+            ]
+        )`
+        };
+    }
+
+    // Streaming for Real-time Risk Assessment
+    getStreamingPatterns() {
+        return {
+            description: 'Stream responses for real-time risk assessment UI updates',
+            pattern: `
+// Streaming for real-time analysis display
+stream = client.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=64000,  # Requires streaming
+    messages=[{"role": "user", "content": "Analyze these 50 compliance gaps..."}],
+    stream=True
+)
+
+# Process stream events
+for event in stream:
+    if event.type == "content_block_delta":
+        if event.delta.type == "text":
+            # Update UI in real-time
+            ui.append_text(event.delta.text)
+        elif event.delta.type == "thinking":
+            # Show thinking process (if enabled)
+            ui.show_thinking(event.delta.thinking)
+    elif event.type == "message_stop":
+        # Final message received
+        final_message = stream.get_final_message()
+        ui.complete(final_message)
+
+# Get final accumulated message
+final = stream.final_message()`,
+            useCases: [
+                'Real-time gap analysis progress display',
+                'Live document processing status',
+                'Progressive risk assessment results',
+                'Interactive compliance Q&A'
+            ]
+        };
+    }
+
+    // Error Handling and Resilience
+    getErrorHandlingPatterns() {
+        return {
+            retryPattern: `
+import time
+import random
+
+def call_with_retry(client, max_retries=5, base_delay=1.0, max_delay=60.0, **kwargs):
+    for attempt in range(max_retries):
+        try:
+            return client.messages.create(**kwargs)
+        except anthropic.RateLimitError as e:
+            retry_after = int(e.response.headers.get("retry-after", "60"))
+            delay = min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
+            print(f"Rate limited. Retrying in {delay:.1f}s...")
+            time.sleep(delay)
+        except anthropic.APIStatusError as e:
+            if e.status_code >= 500:
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                print(f"Server error ({e.status_code}). Retrying in {delay:.1f}s...")
+                time.sleep(delay)
+            else:
+                raise
+    raise Exception("Max retries exceeded")`,
+            errorTypes: [
+                { error: 'BadRequestError', cause: 'Invalid request parameters', action: 'Validate input' },
+                { error: 'AuthenticationError', cause: 'Invalid API key', action: 'Check ANTHROPIC_API_KEY' },
+                { error: 'RateLimitError', cause: 'Too many requests', action: 'Implement retry with backoff' },
+                { error: 'APIStatusError (5xx)', cause: 'Server error', action: 'Retry with exponential backoff' }
+            ]
+        };
+    }
+
+    // Render Claude API Integration Section in Gap Report
+    renderClaudeAPIIntegration() {
+        const config = this.getClaudeAPIConfig();
+        const kb = this.getKnowledgeBaseSystem();
+        const risk = this.getEnhancedRiskAssessment();
+
+        return `
+            <h4>Claude API Integration</h4>
+            <div class="claude-api-section">
+                <div class="api-config">
+                    <h5>Configuration</h5>
+                    <p><strong>Model:</strong> ${config.model}</p>
+                    <p><strong>Max Tokens:</strong> ${config.maxTokens.toLocaleString()}</p>
+                    <p><strong>Thinking:</strong> ${config.thinking.type}</p>
+                    <p><strong>Effort:</strong> ${config.outputConfig.effort}</p>
+                </div>
+
+                <div class="kb-features">
+                    <h5>Knowledge Base Capabilities</h5>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h6>Document Processing</h6>
+                            <ul>
+                                ${kb.documentProcessing.supportedFormats.map(f => `<li>${f.format} (${f.mediaType})</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="feature-card">
+                            <h6>Caching Strategy</h6>
+                            <p>${kb.cachingStrategy.description}</p>
+                            <p><strong>Max Breakpoints:</strong> ${kb.cachingStrategy.maxBreakpoints}</p>
+                            <p><strong>Min Tokens:</strong> ${kb.cachingStrategy.minTokens}</p>
+                        </div>
+                        <div class="feature-card">
+                            <h6>Multi-Document Analysis</h6>
+                            <p>Cross-reference policies, audit reports, and vendor agreements simultaneously</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="risk-enhancement">
+                    <h5>Enhanced Risk Assessment</h5>
+                    <p>${risk.description}</p>
+
+                    <div class="methodology-tabs">
+                        <div class="method-tab">
+                            <h6>Tier 1: Single Call</h6>
+                            <p>${risk.methodology.tier1_singleCall}</p>
+                        </div>
+                        <div class="method-tab">
+                            <h6>Tier 2: Workflow</h6>
+                            <p>${risk.methodology.tier2_workflow}</p>
+                        </div>
+                        <div class="method-tab">
+                            <h6>Tier 3: Agent</h6>
+                            <p>${risk.methodology.tier3_agent}</p>
+                        </div>
+                    </div>
+
+                    <div class="analysis-tools">
+                        <h6>Available Tools</h6>
+                        <ul>
+                            ${this.getComplianceTools().tools.map(t => `<li><strong>${t.name}:</strong> ${t.description}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="implementation-code">
+                    <h5>Implementation Examples</h5>
+                    <div class="code-tabs">
+                        <pre class="code-block"><code>// Document Upload
+${this.getFilesAPIPatterns().uploadPattern}</code></pre>
+
+                        <pre class="code-block"><code>// Structured Risk Analysis
+${risk.structuredOutput.pattern}</code></pre>
+
+                        <pre class="code-block"><code>// Streaming Analysis
+${this.getStreamingPatterns().pattern}</code></pre>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    toggleKBPanel() {
+        const panel = document.getElementById('kb-panel');
+        panel.classList.toggle('hidden');
+    }
+
+    closeKBPanel() {
+        const panel = document.getElementById('kb-panel');
+        panel.classList.add('hidden');
+    }
+
+    initKnowledgeBase() {
+        this.knowledgeBase = {
+            documents: [],
+            searchResults: []
+        };
+
+        // Initialize drag and drop
+        this.initDragDrop();
+
+        // Load existing documents
+        this.loadKnowledgeBase();
+
+        // Bind knowledge base events
+        this.bindKnowledgeBaseEvents();
+    }
+
+    initDragDrop() {
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, this.preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.remove('dragover');
+            }, false);
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            this.handleFiles(files);
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            this.handleFiles(e.target.files);
+        });
+    }
+
+    preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    handleFiles(files) {
+        const fileInput = document.getElementById('file-input');
+        fileInput.files = files;
+        document.getElementById('upload-docs').disabled = files.length === 0;
+    }
+
+    bindKnowledgeBaseEvents() {
+        // Upload button
+        const uploadBtn = document.getElementById('upload-docs');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', () => {
+                this.uploadDocuments();
+            });
+        }
+
+        // Search button
+        const searchBtn = document.getElementById('search-docs');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                this.searchDocuments();
+            });
+        }
+
+        // Clear search button
+        const clearBtn = document.getElementById('clear-search');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                this.clearSearch();
+            });
+        }
+
+        // Risk assessment button (optional)
+        const riskBtn = document.getElementById('find-risk-refs');
+        if (riskBtn) {
+            riskBtn.addEventListener('click', () => {
+                this.findRiskReferences();
+            });
+        }
+
+        // Enter key for search
+        const searchInput = document.getElementById('search-query');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.searchDocuments();
+                }
+            });
+        }
+    }
+
+    async uploadDocuments() {
+        const fileInput = document.getElementById('file-input');
+        const tagsInput = document.getElementById('doc-tags');
+        const files = fileInput.files;
+
+        if (files.length === 0) return;
+
+        const tags = tagsInput.value.trim();
+
+        for (let file of files) {
+            const formData = new FormData();
+            formData.append('document', file);
+            if (tags) {
+                formData.append('tags', tags);
+            }
+
+            try {
+                const response = await fetch('/api/knowledge-base/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                this.knowledgeBase.documents.push(result.entry);
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert(`Failed to upload ${file.name}: ${error.message}`);
+            }
+        }
+
+        // Clear inputs
+        fileInput.value = '';
+        tagsInput.value = '';
+        document.getElementById('upload-docs').disabled = true;
+
+        // Refresh display
+        this.displayDocuments();
+        alert('Documents uploaded successfully!');
+    }
+
+    async loadKnowledgeBase() {
+        try {
+            const response = await fetch('/api/knowledge-base');
+            if (response.ok) {
+                this.knowledgeBase.documents = await response.json();
+                this.displayDocuments();
+            }
+        } catch (error) {
+            console.error('Failed to load knowledge base:', error);
+        }
+    }
+
+    displayDocuments(documents = null) {
+        const container = document.getElementById('documents-list');
+        const countElement = document.getElementById('doc-count');
+        const docs = documents || this.knowledgeBase.documents;
+
+        // Update document count
+        countElement.textContent = `(${docs.length})`;
+
+        if (docs.length === 0) {
+            container.innerHTML = '<p class="empty-state">No documents uploaded yet. Upload some reference materials to get started.</p>';
+            return;
+        }
+
+        container.innerHTML = docs.map(doc => `
+            <div class="document-item">
+                <div class="document-info">
+                    <div class="document-title">${doc.filename}</div>
+                    <div class="document-meta">
+                        Uploaded: ${new Date(doc.uploadDate).toLocaleDateString()} |
+                        Size: ${(doc.size / 1024).toFixed(1)} KB
+                    </div>
+                    ${doc.tags.length > 0 ? `
+                        <div class="document-tags">
+                            ${doc.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="document-actions">
+                    <button class="btn-outline btn-small" onclick="app.downloadDocument('${doc.id}')">
+                        <span class="btn-icon">📥</span> Download
+                    </button>
+                    <button class="btn-outline btn-small" onclick="app.deleteDocument('${doc.id}')" style="color: var(--danger-color);">
+                        <span class="btn-icon">🗑️</span> Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async downloadDocument(id) {
+        try {
+            const response = await fetch(`/api/knowledge-base/download/${id}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = this.knowledgeBase.documents.find(d => d.id === id)?.filename || 'document';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            alert('Failed to download document');
+        }
+    }
+
+    async deleteDocument(id) {
+        if (!confirm('Are you sure you want to delete this document?')) return;
+
+        try {
+            const response = await fetch(`/api/knowledge-base/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.knowledgeBase.documents = this.knowledgeBase.documents.filter(d => d.id !== id);
+                this.displayDocuments();
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            alert('Failed to delete document');
+        }
+    }
+
+    async searchDocuments() {
+        const query = document.getElementById('search-query').value.trim();
+        const tags = document.getElementById('search-tags').value.trim();
+
+        if (!query && !tags) {
+            this.displayDocuments();
+            return;
+        }
+
+        try {
+            const params = new URLSearchParams();
+            if (query) params.append('query', query);
+            if (tags) params.append('tags', tags);
+
+            const response = await fetch(`/api/knowledge-base/search?${params}`);
+            if (response.ok) {
+                const results = await response.json();
+                this.displayDocuments(results);
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            alert('Search failed');
+        }
+    }
+
+    clearSearch() {
+        document.getElementById('search-query').value = '';
+        document.getElementById('search-tags').value = '';
+        this.displayDocuments();
+    }
+
+    async findRiskReferences() {
+        const category = document.getElementById('risk-category').value;
+        if (!category) {
+            alert('Please select a risk category');
+            return;
+        }
+
+        const riskQueries = {
+            'data-breach': 'data breach incident response notification penalty',
+            'consent': 'consent management user rights GDPR CCPA',
+            'data-subject-rights': 'data subject rights access rectification erasure portability',
+            'third-party': 'third party vendor processor DPA data processing agreement',
+            'international-transfer': 'international data transfer adequacy SCC BCR',
+            'privacy-impact': 'privacy impact assessment PIA DPIA high risk processing',
+            'vendor-management': 'vendor management due diligence security assessment',
+            'incident-response': 'incident response plan breach notification timeline'
+        };
+
+        const query = riskQueries[category];
+        document.getElementById('search-query').value = query;
+        await this.searchDocuments();
+
+        // Show results in risk refs section
+        const results = document.getElementById('documents-list').innerHTML;
+        const riskResult = document.getElementById('risk-refs-result');
+        riskResult.innerHTML = `
+            <h4>Risk Assessment References for ${category.replace('-', ' ').toUpperCase()}</h4>
+            <div class="documents-list">${results}</div>
+        `;
+        riskResult.classList.remove('hidden');
     }
 }
 
