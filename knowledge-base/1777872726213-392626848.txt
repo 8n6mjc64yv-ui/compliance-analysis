@@ -1,0 +1,1 @@
+This document contains information about data breach incident response and GDPR compliance requirements for handling personal data breaches.

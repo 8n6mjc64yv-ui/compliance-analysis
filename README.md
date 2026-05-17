@@ -1,12 +1,13 @@
 # Data Protection Compliance Analysis System
 
-A comprehensive web-based tool for analyzing data protection compliance across multiple jurisdictions.
+A comprehensive web-based tool for analyzing data protection compliance across multiple jurisdictions with integrated knowledge base for risk assessment.
 
 ## Features
 
 - **Legal Identification**: Automatically identify applicable privacy laws based on industry and country
 - **Clause Analysis**: Detailed breakdown of regulatory requirements
-- **Gap Analysis**: Comprehensive assessment of organizational compliance status
+- **Gap Analysis**: Comprehensive assessment of organizational compliance status with automatic knowledge base integration
+- **Knowledge Base**: Background document processing for enhanced risk assessment (no UI - agent-only)
 - **Export Reports**: Generate detailed markdown reports
 
 ## Supported Regulations
@@ -20,12 +21,35 @@ A comprehensive web-based tool for analyzing data protection compliance across m
 - APPI (Japan)
 - And more...
 
-## Quick Start
+## Knowledge Base Feature
 
-### Local Development
+The knowledge base provides both automatic background processing and a user interface for document management:
+
+### **Web Interface (Recommended)**
+1. **Access**: Click the "Knowledge Base" button in the top-right corner of the main page
+2. **Upload**: Drag & drop files or click "Browse Files" to select documents
+3. **Tag**: Add relevant tags (comma-separated) for better searchability
+4. **Search**: Use the search box to find specific documents
+5. **Manage**: Download or delete documents as needed
+
+### **Automatic Integration**
+- Documents are automatically referenced during gap analysis
+- Relevant documents appear in risk assessment reports
+- No manual intervention required for compliance workflows
+
+### **API Access (Advanced)**
+For programmatic access or integration with other tools:
 
 ```bash
-# Install dependencies (none required - pure HTML/JS/CSS)
+# Upload via API
+curl -X POST http://localhost:3000/api/knowledge-base/upload \
+  -F "document=@document.pdf" \
+  -F "tags=GDPR,risk assessment"
+```
+
+```bash
+# Install dependencies
+npm install
 
 # Start local server
 npm start
@@ -35,6 +59,34 @@ node server.js
 # Open in browser
 open http://localhost:3000
 ```
+
+### Using the Knowledge Base (API)
+
+```bash
+# Upload a document
+curl -X POST http://localhost:3000/api/knowledge-base/upload \
+  -F "document=@your-document.pdf" \
+  -F "tags=GDPR,risk assessment"
+
+# Search documents
+curl "http://localhost:3000/api/knowledge-base/search?query=data%20breach"
+```
+
+### Using the Knowledge Base
+
+1. Complete the gap analysis (Phases 1-3)
+2. Navigate to Phase 4: Knowledge Base & Risk Assessment
+3. Upload reference documents with relevant tags
+4. Use search or risk category filters to find relevant materials
+5. Access documents during risk assessment workflows
+
+## API Endpoints
+
+- `GET /api/knowledge-base` - List all documents
+- `POST /api/knowledge-base/upload` - Upload a document
+- `DELETE /api/knowledge-base/:id` - Delete a document
+- `GET /api/knowledge-base/download/:id` - Download a document
+- `GET /api/knowledge-base/search?query=...&tags=...` - Search documents
 
 ## Deploy Your Own
 
