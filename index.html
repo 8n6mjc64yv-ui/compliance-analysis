@@ -3,954 +3,708 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EY Compliance Analysis - Data Protection</title>
+    <title>Data Protection Compliance Analysis System</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* EY Brand Color Scheme */
-        :root {
-            --ey-yellow: #FFE700;
-            --ey-black: #0E171E;
-            --ey-white: #FFFFFF;
-            --ey-light-gray: #F5F5F5;
-            --ey-medium-gray: #999999;
-            --ey-dark-gray: #333333;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, "Microsoft YaHei", sans-serif;
-            font-weight: 400;
-            background-color: var(--ey-light-gray);
-            color: var(--ey-dark-gray);
-            line-height: 1.6;
-        }
-
-        /* Layout with Sidebar */
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar - EY Black Background */
-        .sidebar {
-            width: 280px;
-            background-color: var(--ey-black);
-            color: var(--ey-white);
-            padding: 0;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        /* EY Logo Section */
-        .logo-section {
-            padding: 30px 24px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .ey-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .ey-letters {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--ey-white);
-            letter-spacing: 2px;
-        }
-
-        .ey-triangle {
-            width: 0;
-            height: 0;
-            border-left: 16px solid transparent;
-            border-right: 16px solid transparent;
-            border-bottom: 28px solid var(--ey-yellow);
-        }
-
-        .brand-slogan {
-            font-size: 11px;
-            color: var(--ey-medium-gray);
-            margin-top: 8px;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-        }
-
-        /* Sidebar Navigation */
-        .sidebar-nav {
-            padding: 20px 0;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 16px 24px;
-            color: var(--ey-white);
-            text-decoration: none;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-
-        .nav-item:hover {
-            background-color: rgba(255,255,255,0.05);
-            border-left-color: var(--ey-yellow);
-        }
-
-        .nav-item.active {
-            background-color: rgba(255,231,0,0.1);
-            border-left-color: var(--ey-yellow);
-        }
-
-        .nav-icon {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-        }
-
-        .nav-text {
-            font-size: 14px;
-            font-weight: 400;
-        }
-
-        /* Progress Indicator in Sidebar */
-        .progress-section {
-            padding: 24px;
-            margin-top: auto;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .progress-title {
-            font-size: 12px;
-            color: var(--ey-medium-gray);
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .progress-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .progress-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .step-number {
-            width: 28px;
-            height: 28px;
-            background-color: transparent;
-            border: 2px solid var(--ey-medium-gray);
-            color: var(--ey-medium-gray);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .progress-step.completed .step-number {
-            background-color: var(--ey-yellow);
-            border-color: var(--ey-yellow);
-            color: var(--ey-black);
-        }
-
-        .progress-step.active .step-number {
-            border-color: var(--ey-yellow);
-            color: var(--ey-yellow);
-        }
-
-        .step-label {
-            font-size: 13px;
-            color: var(--ey-medium-gray);
-        }
-
-        .progress-step.completed .step-label,
-        .progress-step.active .step-label {
-            color: var(--ey-white);
-        }
-
-        /* Main Content Area */
-        .main-content {
-            margin-left: 280px;
-            flex: 1;
-            padding: 40px;
-            max-width: 1200px;
-        }
-
-        /* Header */
-        .page-header {
-            margin-bottom: 40px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid #E0E0E0;
-        }
-
-        .page-title {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--ey-black);
-            margin-bottom: 8px;
-            line-height: 1.2;
-        }
-
-        .page-subtitle {
-            font-size: 16px;
-            color: var(--ey-medium-gray);
-            font-weight: 400;
-        }
-
-        /* Yellow Accent Bar */
-        .accent-bar {
-            width: 4px;
-            height: 60px;
-            background-color: var(--ey-yellow);
-            margin-bottom: 24px;
-        }
-
-        /* Phase Sections */
-        .phase-section {
-            background-color: var(--ey-white);
-            padding: 32px;
-            margin-bottom: 32px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: none;
-        }
-
-        .phase-section.active {
-            display: block;
-        }
-
-        /* Section Header with Yellow Accent */
-        .section-header {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .section-accent {
-            width: 4px;
-            height: 40px;
-            background-color: var(--ey-yellow);
-            flex-shrink: 0;
-        }
-
-        .section-title-group {
-            flex: 1;
-        }
-
-        .section-title {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--ey-black);
-            margin-bottom: 4px;
-        }
-
-        .section-subtitle {
-            font-size: 14px;
-            color: var(--ey-medium-gray);
-        }
-
-        /* Agent Badge */
-        .agent-badge {
-            display: inline-block;
-            background-color: var(--ey-yellow);
-            color: var(--ey-black);
-            padding: 6px 12px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-left: auto;
-        }
-
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-label {
-            display: block;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--ey-black);
-            margin-bottom: 8px;
-        }
-
-        .form-select,
-        .form-textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #CCCCCC;
-            background-color: var(--ey-white);
-            font-family: Arial, "Microsoft YaHei", sans-serif;
-            font-size: 14px;
-            color: var(--ey-dark-gray);
-            transition: border-color 0.3s;
-        }
-
-        .form-select:focus,
-        .form-textarea:focus {
-            outline: none;
-            border-color: var(--ey-yellow);
-            border-width: 2px;
-            padding: 11px 15px;
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 28px;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-        }
-
-        .btn-primary {
-            background-color: var(--ey-black);
-            color: var(--ey-white);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--ey-dark-gray);
-        }
-
-        .btn-secondary {
-            background-color: var(--ey-yellow);
-            color: var(--ey-black);
-        }
-
-        .btn-secondary:hover {
-            background-color: #E6D000;
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--ey-black);
-            border: 2px solid var(--ey-black);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--ey-black);
-            color: var(--ey-white);
-        }
-
-        .btn:disabled {
-            background-color: var(--ey-medium-gray);
-            color: var(--ey-light-gray);
-            cursor: not-allowed;
-        }
-
-        /* Result Containers */
-        .result-container {
-            margin-top: 32px;
-            padding: 24px;
-            background-color: var(--ey-light-gray);
-            border-left: 4px solid var(--ey-yellow);
-            display: none;
-        }
-
-        .result-container.show {
-            display: block;
-        }
-
-        /* Tables */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 16px;
-        }
-
-        .data-table th {
-            background-color: var(--ey-black);
-            color: var(--ey-white);
-            padding: 14px 16px;
-            text-align: left;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .data-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #E0E0E0;
-            font-size: 14px;
-        }
-
-        .data-table tr:hover {
-            background-color: rgba(255,231,0,0.05);
-        }
-
-        /* Risk Badges */
-        .risk-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .risk-low {
-            background-color: #E8F5E9;
-            color: #2E7D32;
-        }
-
-        .risk-medium {
-            background-color: #FFF3E0;
-            color: #EF6C00;
-        }
-
-        .risk-high {
-            background-color: #FFEBEE;
-            color: #C62828;
-        }
-
-        .risk-severe {
-            background-color: var(--ey-black);
-            color: var(--ey-yellow);
-        }
-
-        /* Status Indicators */
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--ey-yellow);
-        }
-
-        /* Loading Overlay */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(14,23,30,0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .loading-overlay.show {
-            display: flex;
-        }
-
-        .loading-content {
-            text-align: center;
-            color: var(--ey-white);
-        }
-
-        .loading-spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid rgba(255,231,0,0.3);
-            border-top-color: var(--ey-yellow);
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Dimension Sections */
-        .dimension-section {
-            margin-top: 32px;
-            padding: 24px;
-            background-color: var(--ey-light-gray);
-            border-left: 4px solid var(--ey-black);
-        }
-
-        .dimension-title {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--ey-black);
-            margin-bottom: 16px;
-        }
-
-        /* Sub-question Groups */
-        .sub-question-group {
-            margin-left: 24px;
-            padding-left: 24px;
-            border-left: 2px solid #E0E0E0;
-        }
-
-        .sub-input {
-            margin-bottom: 16px;
-        }
-
-        /* Yes/No Groups */
-        .yesno-group {
-            margin-bottom: 24px;
-        }
-
-        .yesno-options {
-            display: flex;
-            gap: 16px;
-            margin-top: 12px;
-        }
-
-        .yesno-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
-            background-color: var(--ey-white);
-            border: 2px solid #CCCCCC;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 700;
-        }
-
-        .yesno-label:hover {
-            border-color: var(--ey-black);
-        }
-
-        .yesno-radio:checked + .yesno-label,
-        .yesno-label:has(.yesno-radio:checked) {
-            background-color: var(--ey-yellow);
-            border-color: var(--ey-yellow);
-            color: var(--ey-black);
-        }
-
-        .yesno-radio {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--ey-black);
-        }
-
-        .yesno-detail {
-            margin-top: 16px;
-            padding: 16px;
-            background-color: var(--ey-white);
-            border-left: 4px solid var(--ey-yellow);
-            display: none;
-        }
-
-        .yesno-detail.show {
-            display: block;
-        }
-
-        /* Hidden Utility */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                position: relative;
-                height: auto;
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 24px;
-            }
-
-            .app-container {
-                flex-direction: column;
-            }
-        }
-    </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <div class="ey-logo">
-                    <div class="ey-triangle"></div>
-                    <span class="ey-letters">EY</span>
-                </div>
-                <div class="brand-slogan">Building a better working world</div>
+    <!-- EY Sidebar -->
+    <aside class="ey-sidebar">
+        <div class="ey-logo">
+            <div class="ey-logo-text">EY</div>
+            <div class="ey-logo-triangle"></div>
+        </div>
+        <div class="ey-tagline">Building a better working world</div>
+        <nav class="ey-nav">
+            <div class="ey-nav-item active">
+                <div class="ey-nav-indicator"></div>
+                <span>Compliance Analysis</span>
             </div>
+        </nav>
+    </aside>
 
-            <nav class="sidebar-nav">
-                <a href="#phase1" class="nav-item active" onclick="showPhase(1)">
-                    <span class="nav-icon">01</span>
-                    <span class="nav-text">Legal Identification</span>
-                </a>
-                <a href="#phase2" class="nav-item" onclick="showPhase(2)">
-                    <span class="nav-icon">02</span>
-                    <span class="nav-text">Regulation Research</span>
-                </a>
-                <a href="#phase3" class="nav-item" onclick="showPhase(3)">
-                    <span class="nav-icon">03</span>
-                    <span class="nav-text">Gap Analysis</span>
-                </a>
-            </nav>
-
-            <div class="progress-section">
-                <div class="progress-title">Progress</div>
-                <div class="progress-steps">
-                    <div class="progress-step active">
-                        <div class="step-number">1</div>
-                        <span class="step-label">Legal ID</span>
-                    </div>
-                    <div class="progress-step">
-                        <div class="step-number">2</div>
-                        <span class="step-label">Research</span>
-                    </div>
-                    <div class="progress-step">
-                        <div class="step-number">3</div>
-                        <span class="step-label">Gap Analysis</span>
-                    </div>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <header>
+                <div class="ey-left-bar"></div>
+                <div class="header-content">
+                    <h1>Data Protection Compliance Analysis System</h1>
+                    <p class="subtitle">Multi-Agent Legal Compliance Workflow</p>
                 </div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="page-header">
-                <div class="accent-bar"></div>
-                <h1 class="page-title">Data Protection Compliance Analysis</h1>
-                <p class="page-subtitle">Multi-jurisdiction regulatory compliance assessment system</p>
+                <div class="kb-management">
+                    <button id="toggle-kb" class="btn-outline">
+                        <span class="btn-icon">📁</span>
+                        Knowledge Base
+                    </button>
+                </div>
             </header>
 
-            <!-- Phase 1: Legal Identification -->
-            <section id="phase1" class="phase-section active">
-                <div class="section-header">
-                    <div class="section-accent"></div>
-                    <div class="section-title-group">
-                        <h2 class="section-title">Phase One: Legal Identification</h2>
-                        <p class="section-subtitle">Identify applicable laws and regulations</p>
-                    </div>
-                    <span class="agent-badge">law-retrieval agent</span>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Company Industry</label>
-                    <select id="industry" class="form-select">
-                        <option value="">Select Industry</option>
-                        <option value="finance">Financial Services</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="ecommerce">E-Commerce</option>
-                        <option value="technology">Technology</option>
-                        <option value="education">Education</option>
-                        <option value="retail">Retail</option>
-                        <option value="manufacturing">Manufacturing</option>
-                        <option value="telecommunications">Telecommunications</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Target Country/Region</label>
-                    <select id="country" class="form-select">
-                        <option value="">Select Country/Region</option>
-                        <option value="EU">European Union</option>
-                        <option value="US">United States</option>
-                        <option value="CN">China</option>
-                        <option value="UK">United Kingdom</option>
-                        <option value="JP">Japan</option>
-                        <option value="KR">South Korea</option>
-                        <option value="SG">Singapore</option>
-                        <option value="AU">Australia</option>
-                        <option value="BR">Brazil</option>
-                        <option value="IN">India</option>
-                    </select>
-                </div>
-
-                <div id="us-state-container" class="form-group hidden">
-                    <label class="form-label">Select U.S. State</label>
-                    <select id="us-state" class="form-select">
-                        <option value="">Select State (Federal Laws)</option>
-                        <option value="CA">California - CCPA/CPRA</option>
-                        <option value="VA">Virginia - VCDPA</option>
-                        <option value="CO">Colorado - CPA</option>
-                        <option value="CT">Connecticut - CTDPA</option>
-                        <option value="UT">Utah - UCPA</option>
-                    </select>
-                </div>
-
-                <button id="analyze-laws" class="btn btn-primary">
-                    <span>&#128269;</span>
-                    Identify Applicable Laws
-                </button>
-
-                <div id="laws-result" class="result-container"></div>
-            </section>
-
-            <!-- Phase 2: Regulation Research -->
-            <section id="phase2" class="phase-section">
-                <div class="section-header">
-                    <div class="section-accent"></div>
-                    <div class="section-title-group">
-                        <h2 class="section-title">Phase Two: Regulation Research</h2>
-                        <p class="section-subtitle">Analyze regulatory requirements and controls</p>
-                    </div>
-                    <span class="agent-badge">clause-analysis agent</span>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Select Law for Analysis</label>
-                    <select id="law-select" class="form-select">
-                        <option value="">Select a Law</option>
-                    </select>
-                </div>
-
-                <button id="analyze-clauses" class="btn btn-primary" disabled>
-                    <span>&#128196;</span>
-                    Analyze Compliance Controls
-                </button>
-
-                <div id="clauses-result" class="result-container"></div>
-            </section>
-
-            <!-- Phase 3: Gap Analysis -->
-            <section id="phase3" class="phase-section">
-                <div class="section-header">
-                    <div class="section-accent"></div>
-                    <div class="section-title-group">
-                        <h2 class="section-title">Phase Three: Gap Analysis</h2>
-                        <p class="section-subtitle">Assess compliance gaps and generate recommendations</p>
-                    </div>
-                    <span class="agent-badge">gap-analysis agent</span>
-                </div>
-
-                <!-- Dimension 1 -->
-                <div class="dimension-section">
-                    <h3 class="dimension-title">Organizational Compliance Design</h3>
-
-                    <div class="yesno-group">
-                        <label class="form-label">Does your organization have a data security and privacy compliance structure?</label>
-                        <div class="yesno-options">
-                            <label class="yesno-label">
-                                <input type="radio" name="org-structure" value="yes" class="yesno-radio" data-detail="org-structure-detail">
-                                Yes
-                            </label>
-                            <label class="yesno-label">
-                                <input type="radio" name="org-structure" value="no" class="yesno-radio" data-detail="org-structure-detail">
-                                No
-                            </label>
-                        </div>
-                        <div id="org-structure-detail" class="yesno-detail">
-                            <label class="form-label">Please describe the organizational structure:</label>
-                            <textarea id="org-structure-text" class="form-textarea" placeholder="Describe your organization's privacy compliance structure..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="yesno-group">
-                        <label class="form-label">Has a dedicated data protection officer been appointed?</label>
-                        <div class="yesno-options">
-                            <label class="yesno-label">
-                                <input type="radio" name="privacy-officer" value="yes" class="yesno-radio" data-detail="privacy-officer-detail">
-                                Yes
-                            </label>
-                            <label class="yesno-label">
-                                <input type="radio" name="privacy-officer" value="no" class="yesno-radio" data-detail="privacy-officer-detail">
-                                No
-                            </label>
-                        </div>
-                        <div id="privacy-officer-detail" class="yesno-detail">
-                            <label class="form-label">Please provide details:</label>
-                            <textarea id="privacy-officer-text" class="form-textarea" placeholder="Describe the DPO role and responsibilities..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dimension 2 -->
-                <div class="dimension-section">
-                    <h3 class="dimension-title">System-Level Data Security</h3>
-
-                    <div class="yesno-group">
-                        <label class="form-label">Do you maintain an inventory of collected personal information?</label>
-                        <div class="yesno-options">
-                            <label class="yesno-label">
-                                <input type="radio" name="pi-inventory" value="yes" class="yesno-radio" data-detail="pi-inventory-detail">
-                                Yes
-                            </label>
-                            <label class="yesno-label">
-                                <input type="radio" name="pi-inventory" value="no" class="yesno-radio" data-detail="pi-inventory-detail">
-                                No
-                            </label>
-                        </div>
-                        <div id="pi-inventory-detail" class="yesno-detail">
-                            <label class="form-label">Please describe the data inventory:</label>
-                            <textarea id="pi-inventory-text" class="form-textarea" placeholder="Describe your data inventory process..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="yesno-group">
-                        <label class="form-label">Is access control implemented for personal data?</label>
-                        <div class="yesno-options">
-                            <label class="yesno-label">
-                                <input type="radio" name="access-control" value="yes" class="yesno-radio" data-detail="access-control-detail">
-                                Yes
-                            </label>
-                            <label class="yesno-label">
-                                <input type="radio" name="access-control" value="no" class="yesno-radio" data-detail="access-control-detail">
-                                No
-                            </label>
-                        </div>
-                        <div id="access-control-detail" class="yesno-detail">
-                            <label class="form-label">Please describe access controls:</label>
-                            <textarea id="access-control-text" class="form-textarea" placeholder="Describe your access control mechanisms..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dimension 3 -->
-                <div class="dimension-section">
-                    <h3 class="dimension-title">Business Process Design</h3>
-
-                    <div class="yesno-group">
-                        <label class="form-label">Are data processing methods documented?</label>
-                        <div class="yesno-options">
-                            <label class="yesno-label">
-                                <input type="radio" name="processing-methods" value="yes" class="yesno-radio" data-detail="processing-methods-detail">
-                                Yes
-                            </label>
-                            <label class="yesno-label">
-                                <input type="radio" name="processing-methods" value="no" class="yesno-radio" data-detail="processing-methods-detail">
-                                No
-                            </label>
-                        </div>
-                        <div id="processing-methods-detail" class="yesno-detail">
-                            <label class="form-label">Please describe processing methods:</label>
-                            <textarea id="processing-methods-text" class="form-textarea" placeholder="Describe your data processing methods..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="yesno-group">
-                        <label class="form-label">Are user rights response methods established?</label>
-                        <div class="yesno-options">
-                            <label class="yesno-label">
-                                <input type="radio" name="rights-response" value="yes" class="yesno-radio" data-detail="rights-response-detail">
-                                Yes
-                            </label>
-                            <label class="yesno-label">
-                                <input type="radio" name="rights-response" value="no" class="yesno-radio" data-detail="rights-response-detail">
-                                No
-                            </label>
-                        </div>
-                        <div id="rights-response-detail" class="yesno-detail">
-                            <label class="form-label">Please describe rights response procedures:</label>
-                            <textarea id="rights-response-text" class="form-textarea" placeholder="Describe your data subject rights response procedures..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="analyze-gaps" class="btn btn-secondary" disabled>
-                    <span>&#128202;</span>
-                    Generate Gap Analysis Report
-                </button>
-
-                <div id="gaps-result" class="result-container"></div>
-            </section>
-
-            <!-- Actions Bar -->
-            <div id="actions-bar" class="actions-bar hidden" style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #E0E0E0;">
-                <button id="export-report" class="btn btn-outline">
-                    <span>&#128190;</span>
-                    Export Full Report
-                </button>
-                <button id="reset-all" class="btn btn-outline" style="margin-left: 16px;">
-                    <span>&#8634;</span>
-                    Start New Analysis
-                </button>
+        <div class="progress-bar">
+            <div class="progress-step active" data-phase="1">
+                <span class="step-number">1</span>
+                <span class="step-label">Legal Identification</span>
             </div>
-        </main>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-phase="2">
+                <span class="step-number">2</span>
+                <span class="step-label">Regulation Research</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-phase="3">
+                <span class="step-number">3</span>
+                <span class="step-label">Gap Analysis</span>
+            </div>
+        </div>
+
+        <!-- Phase 1: Legal Identification -->
+        <section id="phase1" class="phase-section active">
+            <div class="section-header">
+                <h2>Phase One: Legal Identification</h2>
+                <span class="agent-badge">law-retrieval agent</span>
+            </div>
+            <div class="form-group">
+                <label for="industry">Company Industry</label>
+                <select id="industry">
+                    <option value="">Select Industry</option>
+                    <option value="finance">Financial Services</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="ecommerce">E-Commerce</option>
+                    <option value="technology">Technology</option>
+                    <option value="education">Education</option>
+                    <option value="retail">Retail</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="telecommunications">Telecommunications</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="country">Target Country/Region</label>
+                <select id="country">
+                    <option value="">Select Country/Region</option>
+                    <option value="EU">European Union</option>
+                    <option value="US">United States</option>
+                    <option value="CN">China</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="JP">Japan</option>
+                    <option value="KR">South Korea</option>
+                    <option value="SG">Singapore</option>
+                    <option value="AU">Australia</option>
+                    <option value="BR">Brazil</option>
+                    <option value="IN">India</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="us-state-container">
+                <label for="us-state">Select U.S. State</label>
+                <select id="us-state">
+                    <option value="">Select State (Federal Laws)</option>
+                    <option value="CA">California - CCPA/CPRA</option>
+                    <option value="VA">Virginia - VCDPA</option>
+                    <option value="CO">Colorado - CPA</option>
+                    <option value="CT">Connecticut - CTDPA</option>
+                    <option value="UT">Utah - UCPA</option>
+                    <option value="IA">Iowa - ICDPA</option>
+                    <option value="IN">Indiana - INCDPA</option>
+                    <option value="TN">Tennessee - TIPA</option>
+                    <option value="TX">Texas - TDPSA</option>
+                    <option value="FL">Florida - FDBR</option>
+                    <option value="OR">Oregon - OCPA</option>
+                    <option value="MT">Montana - MTCDPA</option>
+                    <option value="TX-MH">Texas - MHMDA</option>
+                    <option value="WA">Washington - MHMDA</option>
+                    <option value="NV">Nevada - NRS 603A</option>
+                    <option value="DE">Delaware - DPDPA</option>
+                    <option value="NJ">New Jersey - NJDPA</option>
+                    <option value="NH">New Hampshire - HBS 255</option>
+                    <option value="NE">Nebraska - NDPA</option>
+                    <option value="MD">Maryland - MODPA</option>
+                    <option value="KY">Kentucky - KCDPA</option>
+                    <option value="RI">Rhode Island - RIDTPA</option>
+                </select>
+            </div>
+            <button id="analyze-laws" class="btn-primary">
+                <span class="btn-icon">&#128269;</span>
+                Identify Applicable Laws
+            </button>
+            <div id="laws-result" class="result-container hidden"></div>
+        </section>
+
+        <!-- Phase 2: Clause Analysis -->
+        <section id="phase2" class="phase-section">
+            <div class="section-header">
+                <h2>Phase Two: Regulation Research</h2>
+                <span class="agent-badge">clause-analysis agent</span>
+            </div>
+            <div class="form-group">
+                <label for="law-select">Select Law for Analysis</label>
+                <select id="law-select">
+                    <option value="">Select a Law</option>
+                </select>
+            </div>
+            <button id="analyze-clauses" class="btn-primary" disabled>
+                <span class="btn-icon">&#128196;</span>
+                Analyze Compliance Controls
+            </button>
+            <div id="clauses-result" class="result-container hidden"></div>
+        </section>
+
+        <!-- Phase 3: Gap Analysis -->
+        <section id="phase3" class="phase-section">
+            <div class="section-header">
+            <!-- Dimension 1: Organizational Compliance Design Status -->
+            <div class="dimension-section">
+                <h4>Organizational Compliance Design Status</h4>
+
+                <div class="form-group yesno-group">
+                    <label>1) Does your organization have a data security and privacy compliance structure for parent and subsidiary companies?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="org-structure" value="yes" class="yesno-radio" data-detail="org-structure-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="org-structure" value="no" class="yesno-radio" data-detail="org-structure-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="org-structure-detail" class="yesno-detail hidden">
+                        <label>Please describe the organizational structure and management methods:</label>
+                        <textarea id="org-structure-text" rows="3" placeholder="e.g., Parent company has a Data Protection Office under Legal Department with 5 FTEs; subsidiaries follow centralized governance model..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>2) Status of the privacy protection management:</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input yesno-group">
+                            <label>Has a dedicated data security and privacy protection officer been appointed?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="privacy-officer" value="yes" class="yesno-radio" data-detail="privacy-officer-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="privacy-officer" value="no" class="yesno-radio" data-detail="privacy-officer-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="privacy-officer-detail" class="yesno-detail hidden">
+                                <textarea id="privacy-officer-text" rows="2" placeholder="e.g., Chief Privacy Officer appointed since 2023, reports to General Counsel, manages team of 5..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Has privacy protection or information security certification been obtained?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="privacy-certification" value="yes" class="yesno-radio" data-detail="privacy-certification-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="privacy-certification" value="no" class="yesno-radio" data-detail="privacy-certification-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="privacy-certification-detail" class="yesno-detail hidden">
+                                <textarea id="privacy-certification-text" rows="2" placeholder="e.g., ISO 27001 certified (2022), ISO 27701 certified (2023), SOC 2 Type II..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Have data processing activities been audited and summarized?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="privacy-audit" value="yes" class="yesno-radio" data-detail="privacy-audit-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="privacy-audit" value="no" class="yesno-radio" data-detail="privacy-audit-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="privacy-audit-detail" class="yesno-detail hidden">
+                                <textarea id="privacy-audit-text" rows="2" placeholder="e.g., Annual internal audits conducted; quarterly privacy reports to board; external audit..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>3) Related internal control management for data security and privacy protection:</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input yesno-group">
+                            <label>Are there internal control management standards for privacy compliance?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="internal-standards" value="yes" class="yesno-radio" data-detail="internal-standards-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="internal-standards" value="no" class="yesno-radio" data-detail="internal-standards-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="internal-standards-detail" class="yesno-detail hidden">
+                                <textarea id="internal-standards-text" rows="2" placeholder="e.g., Privacy Management Framework v2.1 covers 6 stages of data lifecycle..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is data classified and graded for management?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="data-classification" value="yes" class="yesno-radio" data-detail="data-classification-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="data-classification" value="no" class="yesno-radio" data-detail="data-classification-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="data-classification-detail" class="yesno-detail hidden">
+                                <textarea id="data-classification-text" rows="2" placeholder="e.g., 4-tier classification (Public/Internal/Confidential/Restricted)..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is an external third-party data security check conducted?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="third-party-check" value="yes" class="yesno-radio" data-detail="third-party-check-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="third-party-check" value="no" class="yesno-radio" data-detail="third-party-check-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="third-party-check-detail" class="yesno-detail hidden">
+                                <textarea id="third-party-check-text" rows="2" placeholder="e.g., Security assessments required before contract signing; annual audits..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Has the company developed an emergency response plan?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="emergency-plan" value="yes" class="yesno-radio" data-detail="emergency-plan-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="emergency-plan" value="no" class="yesno-radio" data-detail="emergency-plan-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="emergency-plan-detail" class="yesno-detail hidden">
+                                <textarea id="emergency-plan-text" rows="2" placeholder="e.g., Incident Response Plan v3.0 covers 4 severity levels; response team on-call 24/7..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Are records maintained for data disposal activities?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="disposal-records" value="yes" class="yesno-radio" data-detail="disposal-records-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="disposal-records" value="no" class="yesno-radio" data-detail="disposal-records-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="disposal-records-detail" class="yesno-detail hidden">
+                                <textarea id="disposal-records-text" rows="2" placeholder="e.g., Disposal logs retained for 7 years; certificates of destruction..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is a privacy impact assessment conducted periodically?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="periodic-pipia" value="yes" class="yesno-radio" data-detail="periodic-pipia-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="periodic-pipia" value="no" class="yesno-radio" data-detail="periodic-pipia-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="periodic-pipia-detail" class="yesno-detail hidden">
+                                <textarea id="periodic-pipia-text" rows="2" placeholder="e.g., PIPIA conducted annually for high-risk processing; ad-hoc assessments..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is there a response mechanism for personal information subject rights?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="rights-response-team" value="yes" class="yesno-radio" data-detail="rights-response-team-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="rights-response-team" value="no" class="yesno-radio" data-detail="rights-response-team-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="rights-response-team-detail" class="yesno-detail hidden">
+                                <textarea id="rights-response-team-text" rows="2" placeholder="e.g., Dedicated DSAR team with 5 members; self-service portal for access requests..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is a complaint mechanism established?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="complaint-mechanism" value="yes" class="yesno-radio" data-detail="complaint-mechanism-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="complaint-mechanism" value="no" class="yesno-radio" data-detail="complaint-mechanism-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="complaint-mechanism-detail" class="yesno-detail hidden">
+                                <textarea id="complaint-mechanism-text" rows="2" placeholder="e.g., Multi-channel complaint intake (web, email, phone); escalation to CPO within 48 hours..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimension 2: System-Level Data Security Measures -->
+            <div class="dimension-section">
+                <h4>System-Level Data Security Measures</h4>
+
+                <div class="form-group yesno-group">
+                    <label>1) Do you maintain an inventory of collected personal information fields and collection methods?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="pi-inventory" value="yes" class="yesno-radio" data-detail="pi-inventory-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="pi-inventory" value="no" class="yesno-radio" data-detail="pi-inventory-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="pi-inventory-detail" class="yesno-detail hidden">
+                        <label>Please describe the collected fields, quantity, and collection methods:</label>
+                        <textarea id="pi-inventory-text" rows="2" placeholder="e.g., Name (required), Email (required), Phone (optional), ID Number (sensitive); ~500K records..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>2) Is there a secure internal system transmission mechanism?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="internal-transmission" value="yes" class="yesno-radio" data-detail="internal-transmission-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="internal-transmission" value="no" class="yesno-radio" data-detail="internal-transmission-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="internal-transmission-detail" class="yesno-detail hidden">
+                        <label>Please describe the transmission status:</label>
+                        <textarea id="internal-transmission-text" rows="2" placeholder="e.g., Data transmitted between CRM, ERP, and Data Warehouse via internal API with TLS 1.3 encryption..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>3) Is there external third-party sharing or commissioned processing?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="third-party-sharing" value="yes" class="yesno-radio" data-detail="third-party-sharing-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="third-party-sharing" value="no" class="yesno-radio" data-detail="third-party-sharing-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="third-party-sharing-detail" class="yesno-detail hidden">
+                        <label>Please describe the third-party sharing:</label>
+                        <textarea id="third-party-sharing-text" rows="2" placeholder="e.g., Cloud storage with AWS (DPA signed), Email service via SendGrid, Analytics via Google Analytics..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>4) Is access control implemented?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="access-control" value="yes" class="yesno-radio" data-detail="access-control-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="access-control" value="no" class="yesno-radio" data-detail="access-control-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="access-control-detail" class="yesno-detail hidden">
+                        <label>Please describe the access control status:</label>
+                        <textarea id="access-control-text" rows="2" placeholder="e.g., Role-based access control (RBAC) implemented; 4 access levels; quarterly access reviews..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>5) Is obfuscation/masking used in data display?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="display-obfuscation" value="yes" class="yesno-radio" data-detail="display-obfuscation-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="display-obfuscation" value="no" class="yesno-radio" data-detail="display-obfuscation-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="display-obfuscation-detail" class="yesno-detail hidden">
+                        <label>Please describe the obfuscation methods:</label>
+                        <textarea id="display-obfuscation-text" rows="2" placeholder="e.g., ID numbers masked as ****1234, phone numbers as 138****8888..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>6) Are deletion/anonymization mechanisms in place?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="deletion-mechanism" value="yes" class="yesno-radio" data-detail="deletion-mechanism-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="deletion-mechanism" value="no" class="yesno-radio" data-detail="deletion-mechanism-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="deletion-mechanism-detail" class="yesno-detail hidden">
+                        <label>Please describe the mechanisms:</label>
+                        <textarea id="deletion-mechanism-text" rows="2" placeholder="e.g., Automated deletion after retention period; crypto-shredding for immediate deletion..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>7) Are personal information processing logs maintained?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="processing-logs" value="yes" class="yesno-radio" data-detail="processing-logs-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="processing-logs" value="no" class="yesno-radio" data-detail="processing-logs-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="processing-logs-detail" class="yesno-detail hidden">
+                        <label>Please describe methods and retention period:</label>
+                        <textarea id="processing-logs-text" rows="2" placeholder="e.g., All processing activities logged with user ID, timestamp, action type; logs retained for 2 years..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>8) Data Storage Location and Security Mechanisms:</label>
+                    <div class="sub-question-group">
+                        <div class="sub-input yesno-group">
+                            <label>Do you maintain a record of data storage location and data center location?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="storage-location" value="yes" class="yesno-radio" data-detail="storage-location-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="storage-location" value="no" class="yesno-radio" data-detail="storage-location-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="storage-location-detail" class="yesno-detail hidden">
+                                <textarea id="storage-location-text" rows="2" placeholder="e.g., Primary: AWS us-east-1 (Virginia), Secondary: AWS eu-west-1 (Ireland)..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is storage method documented (offline/cloud)?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="storage-method" value="yes" class="yesno-radio" data-detail="storage-method-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="storage-method" value="no" class="yesno-radio" data-detail="storage-method-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="storage-method-detail" class="yesno-detail hidden">
+                                <textarea id="storage-method-text" rows="2" placeholder="e.g., Cloud-based primary storage with 99.99% availability SLA; offline tape backup..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is platform type documented (self-built or third-party cloud)?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="platform-type" value="yes" class="yesno-radio" data-detail="platform-type-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="platform-type" value="no" class="yesno-radio" data-detail="platform-type-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="platform-type-detail" class="yesno-detail hidden">
+                                <textarea id="platform-type-text" rows="2" placeholder="e.g., Hybrid model - self-managed Kubernetes clusters on AWS EC2 for core processing..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is data center synchronization documented?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="data-sync" value="yes" class="yesno-radio" data-detail="data-sync-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="data-sync" value="no" class="yesno-radio" data-detail="data-sync-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="data-sync-detail" class="yesno-detail hidden">
+                                <textarea id="data-sync-text" rows="2" placeholder="e.g., Real-time cross-region replication between US-East and EU-West..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Are data security mechanisms documented?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="security-mechanisms" value="yes" class="yesno-radio" data-detail="security-mechanisms-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="security-mechanisms" value="no" class="yesno-radio" data-detail="security-mechanisms-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="security-mechanisms-detail" class="yesno-detail hidden">
+                                <textarea id="security-mechanisms-text" rows="2" placeholder="e.g., AES-256 encryption at rest with AWS KMS; TLS 1.3 in transit; VPC isolated storage..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sub-input yesno-group">
+                            <label>Is data backup documented?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="backup-status" value="yes" class="yesno-radio" data-detail="backup-status-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="backup-status" value="no" class="yesno-radio" data-detail="backup-status-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="backup-status-detail" class="yesno-detail hidden">
+                                <textarea id="backup-status-text" rows="2" placeholder="e.g., Daily automated backups to S3 with 30-day retention; weekly snapshots to Glacier..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimension 3: Business Process Design Status -->
+            <div class="dimension-section">
+                <h4>Business Process Design Status</h4>
+
+                <div class="form-group yesno-group">
+                    <label>1) Has an evaluation of collection purposes, legality, necessity, and minimal scope been conducted?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="collection-evaluation" value="yes" class="yesno-radio" data-detail="collection-evaluation-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="collection-evaluation" value="no" class="yesno-radio" data-detail="collection-evaluation-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="collection-evaluation-detail" class="yesno-detail hidden">
+                        <label>Please describe the evaluation:</label>
+                        <textarea id="collection-evaluation-text" rows="2" placeholder="e.g., All data collection reviewed against stated purposes; legal basis documented..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>2) Are data processing methods documented?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="processing-methods" value="yes" class="yesno-radio" data-detail="processing-methods-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="processing-methods" value="no" class="yesno-radio" data-detail="processing-methods-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="processing-methods-detail" class="yesno-detail hidden">
+                        <label>Please describe the methods:</label>
+                        <textarea id="processing-methods-text" rows="2" placeholder="e.g., Automated processing for account management, profiling for personalization..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>3) Is privacy policy configuration complete?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="privacy-policy" value="yes" class="yesno-radio" data-detail="privacy-policy-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="privacy-policy" value="no" class="yesno-radio" data-detail="privacy-policy-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="privacy-policy-detail" class="yesno-detail hidden">
+                        <label>Please describe the privacy policy configuration:</label>
+                        <textarea id="privacy-policy-text" rows="2" placeholder="e.g., Layered privacy notice implemented; available in 5 languages..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>4) Are user rights response methods established?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="rights-response" value="yes" class="yesno-radio" data-detail="rights-response-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="rights-response" value="no" class="yesno-radio" data-detail="rights-response-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="rights-response-detail" class="yesno-detail hidden">
+                        <label>Please describe the response methods:</label>
+                        <textarea id="rights-response-text" rows="2" placeholder="e.g., Self-service portal for access/export, email for deletion requests..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>5) Have Personal Information Protection Impact Assessments (PIPIA) been conducted?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="pipia-results" value="yes" class="yesno-radio" data-detail="pipia-results-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="pipia-results" value="no" class="yesno-radio" data-detail="pipia-results-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="pipia-results-detail" class="yesno-detail hidden">
+                        <label>Please describe the PIPIA results:</label>
+                        <textarea id="pipia-results-text" rows="2" placeholder="e.g., DPIA conducted for: biometric authentication, large-scale profiling..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>6) Do you share personal information to third parties?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="third-party-sharing-main" value="yes" class="yesno-radio" data-detail="third-party-sharing-main-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="third-party-sharing-main" value="no" class="yesno-radio" data-detail="third-party-sharing-main-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="third-party-sharing-main-detail" class="yesno-detail hidden">
+                        <label>Please describe sharing circumstances (types, purposes, data being shared):</label>
+                        <textarea id="third-party-sharing-circumstances" rows="2" placeholder="e.g., Sharing with marketing partners (email addresses, purchase history)..."></textarea>
+                        <div class="sub-input yesno-group" style="margin-top: 1rem;">
+                            <label>Have you obtained consent for third-party sharing?</label>
+                            <div class="yesno-options">
+                                <label class="yesno-label"><input type="radio" name="third-party-consent" value="yes" class="yesno-radio" data-detail="third-party-consent-detail"><span class="yesno-text">Yes</span></label>
+                                <label class="yesno-label"><input type="radio" name="third-party-consent" value="no" class="yesno-radio" data-detail="third-party-consent-detail"><span class="yesno-text">No</span></label>
+                            </div>
+                            <div id="third-party-consent-detail" class="yesno-detail hidden">
+                                <textarea id="third-party-sharing-consent" rows="2" placeholder="e.g., Explicit opt-in consent obtained via checkbox at checkout..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>7) Do you supervise the data processing activities of data recipients?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="recipient-supervision" value="yes" class="yesno-radio" data-detail="recipient-supervision-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="recipient-supervision" value="no" class="yesno-radio" data-detail="recipient-supervision-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="recipient-supervision-detail" class="yesno-detail hidden">
+                        <label>Please describe supervision measures:</label>
+                        <textarea id="recipient-supervision-text" rows="2" placeholder="e.g., Quarterly audits conducted for all data recipients; annual security assessments..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>8) Do you sign contracts with recipients stipulating purpose, duration, protective measures, and obligations?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="recipient-contracts" value="yes" class="yesno-radio" data-detail="recipient-contracts-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="recipient-contracts" value="no" class="yesno-radio" data-detail="recipient-contracts-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="recipient-contracts-detail" class="yesno-detail hidden">
+                        <label>Please describe contract provisions:</label>
+                        <textarea id="recipient-contracts-text" rows="2" placeholder="e.g., Standard Data Processing Agreement used for all recipients; contracts specify: permitted purposes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>9) Are there scenarios of internal sharing (subsidiaries, affiliated companies)?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="internal-sharing" value="yes" class="yesno-radio" data-detail="internal-sharing-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="internal-sharing" value="no" class="yesno-radio" data-detail="internal-sharing-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="internal-sharing-detail" class="yesno-detail hidden">
+                        <label>Please describe the business purpose, data scope, and systems involved:</label>
+                        <textarea id="internal-sharing-scenarios" rows="2" placeholder="e.g., Data shared with 3 subsidiaries in EU and APAC for unified customer service..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>10) Do you conduct PIPIA before entrusting others to process personal information?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="entrusted-pipia" value="yes" class="yesno-radio" data-detail="entrusted-pipia-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="entrusted-pipia" value="no" class="yesno-radio" data-detail="entrusted-pipia-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="entrusted-pipia-detail" class="yesno-detail hidden">
+                        <label>Please describe the assessment process:</label>
+                        <textarea id="entrusted-pipia-text" rows="2" placeholder="e.g., PIPIA conducted for all new entrusted processing relationships; annual review..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>11) Do you sign contracts with entrusted parties stipulating purpose, duration, protective measures, and obligations?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="entrusted-contracts" value="yes" class="yesno-radio" data-detail="entrusted-contracts-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="entrusted-contracts" value="no" class="yesno-radio" data-detail="entrusted-contracts-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="entrusted-contracts-detail" class="yesno-detail hidden">
+                        <label>Please describe contract provisions:</label>
+                        <textarea id="entrusted-contracts-text" rows="2" placeholder="e.g., All processors required to sign Data Processing Addendum; contracts include: specific processing instructions..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group yesno-group">
+                    <label>12) Do you supervise the personal information processing activities of entrusted parties?</label>
+                    <div class="yesno-options">
+                        <label class="yesno-label"><input type="radio" name="entrusted-supervision" value="yes" class="yesno-radio" data-detail="entrusted-supervision-detail"><span class="yesno-text">Yes</span></label>
+                        <label class="yesno-label"><input type="radio" name="entrusted-supervision" value="no" class="yesno-radio" data-detail="entrusted-supervision-detail"><span class="yesno-text">No</span></label>
+                    </div>
+                    <div id="entrusted-supervision-detail" class="yesno-detail hidden">
+                        <label>Please describe supervision measures:</label>
+                        <textarea id="entrusted-supervision-text" rows="2" placeholder="e.g., Monthly security reports required from all processors; annual on-site audits for critical processors..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <button id="analyze-gaps" class="btn-primary" disabled>
+                <span class="btn-icon">&#128202;</span>
+                Generate Gap Analysis Report
+            </button>
+            <div id="gaps-result" class="result-container hidden"></div>
+        </section>
+
+        <div class="actions-bar hidden" id="actions-bar">
+            <button id="export-report" class="btn-secondary">
+                <span class="btn-icon">&#128190;</span>
+                Export Full Report
+            </button>
+            <button id="reset-all" class="btn-outline">
+                <span class="btn-icon">&#8634;</span>
+                Start New Analysis
+            </button>
+        </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay">
+    <!-- Knowledge Base Management Panel -->
+    <div id="kb-panel" class="kb-panel hidden">
+        <div class="kb-panel-header">
+            <h2>Knowledge Base Management</h2>
+            <button id="close-kb" class="btn-close">×</button>
+        </div>
+
+        <div class="kb-content">
+            <!-- Upload Section -->
+            <div class="kb-section">
+                <h3>Upload Reference Documents</h3>
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-content">
+                        <span class="upload-icon">📁</span>
+                        <p>Drag & drop documents here or click to browse</p>
+                        <p class="upload-hint">Supported formats: PDF, DOCX, TXT (max 10MB each)</p>
+                        <input type="file" id="file-input" multiple accept=".pdf,.docx,.txt" style="display: none;">
+                        <button id="browse-btn" class="btn-outline">Browse Files</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="doc-tags">Tags (comma-separated):</label>
+                    <input type="text" id="doc-tags" placeholder="e.g., GDPR, risk assessment, case study, compliance">
+                </div>
+                <button id="upload-docs" class="btn-primary" disabled>
+                    <span class="btn-icon">⬆️</span>
+                    Upload Documents
+                </button>
+            </div>
+
+            <!-- Search Section -->
+            <div class="kb-section">
+                <h3>Search Documents</h3>
+                <div class="search-controls">
+                    <div class="form-group">
+                        <label for="search-query">Search Query:</label>
+                        <input type="text" id="search-query" placeholder="Enter keywords to search documents...">
+                    </div>
+                    <div class="form-group">
+                        <label for="search-tags">Filter by Tags:</label>
+                        <input type="text" id="search-tags" placeholder="e.g., GDPR, risk assessment">
+                    </div>
+                    <button id="search-docs" class="btn-primary">
+                        <span class="btn-icon">🔍</span>
+                        Search
+                    </button>
+                    <button id="clear-search" class="btn-outline">
+                        <span class="btn-icon">🗑️</span>
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Documents List -->
+            <div class="kb-section">
+                <h3>Reference Documents <span id="doc-count" class="doc-count">(0)</span></h3>
+                <div id="documents-list" class="documents-list">
+                    <p class="empty-state">No documents uploaded yet. Upload some reference materials to get started.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-content">
-            <div class="loading-spinner"></div>
+            <div class="spinner"></div>
             <p id="loading-text">Processing...</p>
         </div>
     </div>
 
     <script src="app.js"></script>
-    <script>
-        // Simple navigation handler
-        function showPhase(phaseNum) {
-            document.querySelectorAll('.phase-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            document.querySelectorAll('.progress-step').forEach((step, index) => {
-                step.classList.remove('active', 'completed');
-                if (index < phaseNum - 1) {
-                    step.classList.add('completed');
-                } else if (index === phaseNum - 1) {
-                    step.classList.add('active');
-                }
-            });
-
-            document.getElementById('phase' + phaseNum).classList.add('active');
-            event.target.closest('.nav-item').classList.add('active');
-        }
-
-        // Yes/No toggle handler
-        document.querySelectorAll('.yesno-radio').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const detailId = this.getAttribute('data-detail');
-                const detailDiv = document.getElementById(detailId);
-                if (this.value === 'yes') {
-                    detailDiv.classList.add('show');
-                } else {
-                    detailDiv.classList.remove('show');
-                    const textarea = detailDiv.querySelector('textarea');
-                    if (textarea) textarea.value = '';
-                }
-            });
-        });
-
-        // US State dropdown toggle
-        document.getElementById('country').addEventListener('change', function() {
-            const stateContainer = document.getElementById('us-state-container');
-            if (this.value === 'US') {
-                stateContainer.classList.remove('hidden');
-            } else {
-                stateContainer.classList.add('hidden');
-            }
-        });
-    </script>
 </body>
 </html>
