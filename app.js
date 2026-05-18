@@ -4854,56 +4854,50 @@ function initSidebarNavigation() {
     const phaseNavItems = document.querySelectorAll('.phase-nav-item');
     const progressSteps = document.querySelectorAll('.progress-step');
 
+    function switchToPhase(phase) {
+        const phaseNum = parseInt(phase);
+
+        // Close all dropdowns and reset indicators
+        document.querySelectorAll('.ey-nav-dropdown').forEach(d => d.classList.remove('open'));
+        document.querySelectorAll('.ey-nav-chevron').forEach(c => c.textContent = '▸');
+        document.querySelectorAll('.phase-nav-item').forEach(n => n.classList.remove('active'));
+
+        // Open the target phase dropdown and activate
+        const navItem = document.querySelector('.phase-nav-item[data-phase="' + phase + '"]');
+        const dropdown = document.querySelector('[data-phase-dropdown="' + phase + '"]');
+        const chevron = navItem ? navItem.querySelector('.ey-nav-chevron') : null;
+
+        if (dropdown) dropdown.classList.add('open');
+        if (chevron) chevron.textContent = '▾';
+        if (navItem) navItem.classList.add('active');
+
+        // Switch phase section
+        document.querySelectorAll('.phase-section').forEach(s => s.classList.remove('active'));
+        const phaseSection = document.getElementById('phase' + phase);
+        if (phaseSection) phaseSection.classList.add('active');
+
+        // Update progress bar
+        progressSteps.forEach((step, index) => {
+            step.classList.remove('active', 'completed');
+            if (index + 1 < phaseNum) {
+                step.classList.add('completed');
+            } else if (index + 1 === phaseNum) {
+                step.classList.add('active');
+            }
+        });
+    }
+
+    // Sidebar nav item clicks
     phaseNavItems.forEach(item => {
         item.addEventListener('click', () => {
-            const phase = item.getAttribute('data-phase');
-            const dropdown = document.querySelector(`[data-phase-dropdown="${phase}"]`);
-
-            // Toggle dropdown
-            const isOpen = dropdown.classList.contains('open');
-            const chevron = item.querySelector('.ey-nav-chevron');
-
-            // Close all dropdowns
-            document.querySelectorAll('.ey-nav-dropdown').forEach(d => d.classList.remove('open'));
-            document.querySelectorAll('.ey-nav-chevron').forEach(c => c.textContent = '▸');
-
-            // Mark all nav items as inactive
-            document.querySelectorAll('.phase-nav-item').forEach(n => n.classList.remove('active'));
-            document.querySelectorAll('.ey-nav-indicator').forEach(ind => ind.style.display = '');
-
-            if (!isOpen) {
-                dropdown.classList.add('open');
-                chevron.textContent = '▾';
-                item.classList.add('active');
-            }
-
-            // Switch to corresponding phase section
-            document.querySelectorAll('.phase-section').forEach(s => s.classList.remove('active'));
-            const phaseSection = document.getElementById('phase' + phase);
-            if (phaseSection) {
-                phaseSection.classList.add('active');
-            }
-
-            // Update progress bar - mark previous phases completed, current active
-            progressSteps.forEach((step, index) => {
-                step.classList.remove('active', 'completed');
-                if (index + 1 < parseInt(phase)) {
-                    step.classList.add('completed');
-                } else if (index + 1 === parseInt(phase)) {
-                    step.classList.add('active');
-                }
-            });
+            switchToPhase(item.getAttribute('data-phase'));
         });
     });
 
-    // Sync progress bar clicks with sidebar
+    // Progress bar clicks sync to sidebar
     progressSteps.forEach(step => {
         step.addEventListener('click', () => {
-            const phase = step.getAttribute('data-phase');
-            const navItem = document.querySelector('.phase-nav-item[data-phase="' + phase + '"]');
-            if (navItem) {
-                navItem.click();
-            }
+            switchToPhase(step.getAttribute('data-phase'));
         });
     });
 }
