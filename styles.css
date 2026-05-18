@@ -27,6 +27,10 @@
     box-sizing: border-box;
 }
 
+.hidden {
+    display: none !important;
+}
+
 /* EY Sidebar Layout */
 body {
     font-family: Arial, 'Microsoft YaHei', Helvetica, sans-serif;
@@ -117,6 +121,85 @@ body {
 .ey-nav-item span {
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+/* Phase Navigation */
+.ey-nav-section-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--ey-medium-gray);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 1.5rem 1rem 0.75rem;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.phase-nav-item {
+    padding: 0.75rem 1rem;
+}
+
+.ey-nav-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+}
+
+.ey-nav-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ey-white);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.ey-nav-subtitle {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--ey-medium-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ey-nav-chevron {
+    font-size: 0.75rem;
+    color: var(--ey-medium-gray);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.ey-nav-item.active .ey-nav-chevron {
+    color: var(--ey-yellow);
+    transform: rotate(0deg);
+}
+
+.ey-nav-dropdown {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    padding: 0 1rem 0 2.5rem;
+}
+
+.ey-nav-dropdown.open {
+    max-height: 300px;
+    padding: 0.5rem 1rem 0.75rem 2.5rem;
+}
+
+.ey-dropdown-item {
+    font-size: 0.75rem;
+    color: var(--ey-medium-gray);
+    padding: 0.4rem 0;
+    line-height: 1.5;
+    position: relative;
+    padding-left: 0.75rem;
+}
+
+.ey-dropdown-item::before {
+    content: '—';
+    position: absolute;
+    left: -0.25rem;
+    color: var(--ey-yellow);
+    opacity: 0.6;
+    font-size: 0.65rem;
 }
 
 .main-content {
@@ -579,6 +662,10 @@ header h1 {
     align-items: center;
     justify-content: center;
     z-index: 2000;
+}
+
+.loading-overlay.hidden {
+    display: none;
 }
 
 .loading-content {

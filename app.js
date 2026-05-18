@@ -4849,7 +4849,67 @@ ${this.getStreamingPatterns().pattern}</code></pre>
     }
 }
 
+// Sidebar Phase Navigation
+function initSidebarNavigation() {
+    const phaseNavItems = document.querySelectorAll('.phase-nav-item');
+    const progressSteps = document.querySelectorAll('.progress-step');
+
+    phaseNavItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const phase = item.getAttribute('data-phase');
+            const dropdown = document.querySelector(`[data-phase-dropdown="${phase}"]`);
+
+            // Toggle dropdown
+            const isOpen = dropdown.classList.contains('open');
+            const chevron = item.querySelector('.ey-nav-chevron');
+
+            // Close all dropdowns
+            document.querySelectorAll('.ey-nav-dropdown').forEach(d => d.classList.remove('open'));
+            document.querySelectorAll('.ey-nav-chevron').forEach(c => c.textContent = '▸');
+
+            // Mark all nav items as inactive
+            document.querySelectorAll('.phase-nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.ey-nav-indicator').forEach(ind => ind.style.display = '');
+
+            if (!isOpen) {
+                dropdown.classList.add('open');
+                chevron.textContent = '▾';
+                item.classList.add('active');
+            }
+
+            // Switch to corresponding phase section
+            document.querySelectorAll('.phase-section').forEach(s => s.classList.remove('active'));
+            const phaseSection = document.getElementById('phase' + phase);
+            if (phaseSection) {
+                phaseSection.classList.add('active');
+            }
+
+            // Update progress bar - mark previous phases completed, current active
+            progressSteps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < parseInt(phase)) {
+                    step.classList.add('completed');
+                } else if (index + 1 === parseInt(phase)) {
+                    step.classList.add('active');
+                }
+            });
+        });
+    });
+
+    // Sync progress bar clicks with sidebar
+    progressSteps.forEach(step => {
+        step.addEventListener('click', () => {
+            const phase = step.getAttribute('data-phase');
+            const navItem = document.querySelector('.phase-nav-item[data-phase="' + phase + '"]');
+            if (navItem) {
+                navItem.click();
+            }
+        });
+    });
+}
+
 // Initialize the system
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new ComplianceAnalysisSystem();
+    initSidebarNavigation();
 });
