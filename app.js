@@ -1565,7 +1565,14 @@ class ComplianceAnalysisSystem {
                 }
 
                 const btn = document.getElementById('analyze-gaps');
-                if (btn) btn.disabled = !allAnswered;
+                if (btn) {
+                    // Keep button clickable but show visual readiness
+                    if (allAnswered) {
+                        btn.classList.add('ready');
+                    } else {
+                        btn.classList.remove('ready');
+                    }
+                }
             } catch (e) {
                 console.error('updateGapAnalysisButton error:', e);
             }
@@ -3996,7 +4003,7 @@ ${g.recommendations.map(r => `- ${r}`).join('\n')}
         document.getElementById('phase2').classList.remove('active');
         document.getElementById('phase3').classList.remove('active');
         document.getElementById('analyze-clauses').disabled = true;
-        document.getElementById('analyze-gaps').disabled = true;
+        document.getElementById('analyze-gaps').classList.remove('ready');
 
         // Hide actions bar
         document.getElementById('actions-bar').classList.add('hidden');

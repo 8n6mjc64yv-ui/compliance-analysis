@@ -424,6 +424,13 @@ header h1 {
     border-color: var(--ey-medium-gray);
 }
 
+.btn-primary.ready {
+    background: var(--ey-black);
+    color: var(--ey-yellow);
+    border: 2px solid var(--ey-yellow);
+    box-shadow: 0 0 0 2px rgba(255, 231, 0, 0.3);
+}
+
 .btn-secondary {
     background: var(--ey-black);
     color: var(--ey-white);
