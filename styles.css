@@ -657,6 +657,42 @@ header h1 {
     border: 2px solid #DC143C;
 }
 
+/* DPIA Risk Assessment Matrix */
+.risk-matrix {
+    display: grid;
+    grid-template-columns: 160px repeat(5, 1fr);
+    gap: 1px;
+    background: var(--ey-black);
+    border: 2px solid var(--ey-black);
+    margin: 1rem 0;
+    overflow: hidden;
+}
+
+.risk-matrix-cell {
+    padding: 0.7rem 0.5rem;
+    text-align: center;
+    font-size: 0.75rem;
+    background: var(--ey-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+}
+
+.risk-matrix-cell.header {
+    background: var(--ey-black);
+    color: var(--ey-yellow);
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.risk-matrix-cell.header-corner {
+    font-size: 0.68rem;
+}
+
 /* Loading Overlay */
 .loading-overlay {
     position: fixed;
@@ -1256,25 +1292,44 @@ header h1 {
 }
 
 .classification-box {
-    padding: 1rem;
+    padding: 1rem 1.25rem;
     border-radius: 0;
     margin: 1rem 0;
     border-left: 4px solid;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.6;
 }
 
 .classification-box.classification-green {
-    background: var(--ey-light-gray);
-    border-left-color: var(--ey-black);
+    background: var(--ey-white);
+    border: 2px solid var(--ey-black);
+    border-left: 6px solid var(--ey-black);
+}
+
+.classification-box.classification-green strong {
+    color: var(--ey-black);
 }
 
 .classification-box.classification-yellow {
     background: var(--ey-yellow);
-    border-left-color: var(--ey-black);
+    border: 2px solid var(--ey-black);
+    border-left: 6px solid var(--ey-black);
+}
+
+.classification-box.classification-yellow strong {
+    color: var(--ey-black);
 }
 
 .classification-box.classification-red {
-    background: #fef2f2;
-    border-left-color: #DC143C;
+    background: var(--ey-black);
+    color: var(--ey-white);
+    border: 2px solid var(--ey-black);
+    border-left: 6px solid #DC143C;
+}
+
+.classification-box.classification-red strong {
+    color: var(--ey-yellow);
 }
 
 .escalation-notice {

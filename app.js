@@ -2619,64 +2619,223 @@ class ComplianceAnalysisSystem {
     }
 
     generateRecommendations(control) {
-        const recs = {
+        const dpia = this.getEnhancedDPIA();
+        const bizInfo = this.analysisData.businessInfo || {};
+        const law = this.analysisData.selectedLaw || {};
+
+        const baseRecs = {
             'Data Processing Principles': [
-                'Implement a data inventory and mapping exercise',
-                'Document lawful basis for each processing activity',
-                'Review and minimize data collection practices'
+                {
+                    action: 'Conduct comprehensive data inventory and mapping exercise',
+                    detail: 'Per DPIA Step 2 (Systematic Description): identify all personal data flows — collection sources, storage locations, processing purposes, retention periods, and third-party recipients. Document using data flow diagrams and maintain a Records of Processing Activities (ROPA) as required under GDPR Art.30.',
+                    dpiaStep: 'Step 2: Systematic Description',
+                    reference: 'GDPR Art.5, Art.30; EDPB WP248rev.01'
+                },
+                {
+                    action: 'Document lawful basis for each processing activity',
+                    detail: 'Per DPIA Step 3 (Necessity & Proportionality): for each processing purpose, identify and document the specific lawful basis relied upon (consent, legitimate interest, legal obligation, etc.). Where legitimate interest is the basis, complete a Legitimate Interest Assessment (LIA) balancing your interests against data subject rights and freedoms.',
+                    dpiaStep: 'Step 3: Necessity and Proportionality Assessment',
+                    reference: 'GDPR Art.6, Art.7; Recital 47'
+                },
+                {
+                    action: 'Implement data minimization and purpose limitation controls',
+                    detail: 'Review all data collection points to ensure only data that is adequate, relevant, and limited to what is necessary is collected. Establish retention schedules and automated deletion mechanisms. Per DPIA Step 4, verify that processing achieves the stated purpose without less intrusive alternatives.',
+                    dpiaStep: 'Step 4: Risk Identification and Assessment',
+                    reference: 'GDPR Art.5(1)(c), Art.5(1)(e); EDPB 4/2019'
+                }
             ],
             'Lawful Basis': [
-                'Review all processing activities for lawful basis',
-                'Document legitimate interest assessments',
-                'Update consent mechanisms where required'
+                {
+                    action: 'Audit all processing activities for valid lawful basis',
+                    detail: 'Map each processing activity to its specific lawful basis under applicable regulation. For GDPR, verify against Art.6(1)(a)-(f). Where processing involves special category data, ensure an Art.9(2) condition is also met. Document the analysis as part of the DPIA necessity assessment (Step 3).',
+                    dpiaStep: 'Step 3: Necessity and Proportionality Assessment',
+                    reference: 'GDPR Art.6, Art.9; UK GDPR Art.6, Art.9'
+                },
+                {
+                    action: 'Complete and document Legitimate Interest Assessments (LIA)',
+                    detail: 'For processing based on legitimate interest, follow the three-part test: (1) identify the legitimate interest pursued, (2) demonstrate necessity of processing for that purpose, (3) balance against data subject interests, rights, and freedoms. This assessment forms part of the DPIA proportionality analysis.',
+                    dpiaStep: 'Step 4: Risk Identification and Assessment',
+                    reference: 'GDPR Art.6(1)(f); Recital 47; EDPB 8/2020'
+                },
+                {
+                    action: 'Review and strengthen consent mechanisms where consent is the lawful basis',
+                    detail: 'Ensure consent meets the GDPR standard: freely given, specific, informed, and unambiguous (Art.4(11)). Implement granular opt-in mechanisms with clear affirmative action. Maintain consent records including what was consented to, when, and how. Provide accessible withdrawal mechanisms that are as easy as giving consent.',
+                    dpiaStep: 'Step 3: Necessity and Proportionality Assessment',
+                    reference: 'GDPR Art.7, Art.4(11); EDPB 5/2020 on Consent'
+                }
             ],
             'Consent': [
-                'Implement granular consent management system',
-                'Ensure consent is freely given, specific, and informed',
-                'Provide easy withdrawal mechanism'
+                {
+                    action: 'Implement granular consent management system',
+                    detail: 'Deploy a consent management platform (CMP) that captures consent per processing purpose with clear audit trails. Per DPIA methodology, consent must be demonstrable — the controller bears the burden of proof. Separate consent for distinct processing operations; do not bundle consent as a condition of service unless processing is strictly necessary.',
+                    dpiaStep: 'Step 2: Systematic Description',
+                    reference: 'GDPR Art.7(1)-(2); EDPB 5/2020 Guidelines'
+                },
+                {
+                    action: 'Ensure consent is freely given with no detriment for refusal',
+                    detail: 'Per EDPB guidance, consent is not freely given where there is a clear imbalance of power (e.g., employer-employee) or where consent is bundled with other matters (prohibition on coupling). Conduct a freedom-of-consent audit: can data subjects refuse without penalty? Is there granularity per purpose? Can consent be withdrawn as easily as given?',
+                    dpiaStep: 'Step 3: Necessity and Proportionality Assessment',
+                    reference: 'GDPR Art.7(4); Recital 42-43; EDPB 5/2020'
+                },
+                {
+                    action: 'Build consent withdrawal and refresh mechanisms',
+                    detail: 'Implement one-click consent withdrawal directly from the privacy dashboard. Establish consent refresh cycles (recommended: annual for non-sensitive processing, 6-monthly for sensitive). Per DPIA Step 7 (Ongoing Review), consent validity should be reviewed periodically and upon any change in processing purpose or scope.',
+                    dpiaStep: 'Step 7: Ongoing Review',
+                    reference: 'GDPR Art.7(3); Art.13(2)(c); EDPB 5/2020'
+                }
             ],
             'Transparency': [
-                'Review and update privacy notices',
-                'Ensure layered privacy notices are provided',
-                'Include all required information disclosures'
+                {
+                    action: 'Review and update privacy notices for layered transparency',
+                    detail: 'Implement a multi-layered privacy notice approach: (Layer 1) concise key information at point of collection, (Layer 2) full privacy notice with all Art.13/14 elements, (Layer 3) detailed policy documents. Per DPIA Step 2, the notice must describe all processing purposes, recipients, retention periods, and data subject rights.',
+                    dpiaStep: 'Step 2: Systematic Description',
+                    reference: 'GDPR Art.12, Art.13, Art.14; WP29 Transparency Guidelines'
+                },
+                {
+                    action: 'Ensure all required information disclosures are complete',
+                    detail: 'Verify privacy notices include all mandatory elements: controller identity and contact details, DPO contact, purposes and lawful basis, legitimate interests where applicable, recipients/categories of recipients, international transfer details and safeguards, retention period/criteria, rights enumeration, right to withdraw consent, right to lodge complaint with supervisory authority, source of data (if not from data subject), and automated decision-making logic and consequences.',
+                    dpiaStep: 'Step 4: Risk Identification',
+                    reference: 'GDPR Art.13(1)-(2), Art.14(1)-(2); CCPA §1798.100'
+                },
+                {
+                    action: 'Use icons, dashboards, and just-in-time notices',
+                    detail: 'Supplement text notices with standardized icons (Art.12(7)) to give data subjects a meaningful overview of intended processing. Implement just-in-time contextual notices at key data collection touchpoints. Maintain a public-facing privacy dashboard that allows data subjects to understand and manage how their data is used.',
+                    dpiaStep: 'Step 1: Screening and Scoping',
+                    reference: 'GDPR Art.12(1), Art.12(7); Recital 58, 60'
+                }
             ],
             'Data Subject Rights': [
-                'Implement DSAR response workflow',
-                'Create templates for rights responses',
-                'Train staff on handling rights requests'
+                {
+                    action: 'Implement DSAR (Data Subject Access Request) response workflow',
+                    detail: 'Establish a formal DSAR handling procedure with defined roles, response timelines (within one month, extendable by two months for complex requests), identity verification protocol, and a centralized request tracking system. Per DPIA methodology, the procedure must cover all data subject rights: access, rectification, erasure, restriction, portability, and objection.',
+                    dpiaStep: 'Step 2: Systematic Description',
+                    reference: 'GDPR Art.15-21; Art.12(3)-(4); EDPB 1/2022'
+                },
+                {
+                    action: 'Build automated rights fulfillment infrastructure',
+                    detail: 'Implement technical capabilities to locate all personal data relating to a data subject across systems (indexing, search, data linkage), compile a complete response, and handle portability requests in a structured, commonly used, machine-readable format. Per DPIA Step 6, this should be tested and verified.',
+                    dpiaStep: 'Step 6: DPO Advice and Sign-Off',
+                    reference: 'GDPR Art.15, Art.20; EDPB 6/2020'
+                },
+                {
+                    action: 'Train frontline staff on rights request identification and handling',
+                    detail: 'All customer-facing staff must recognize a data subject rights request regardless of how it is communicated (verbally, email, social media, etc.). Requests do not need to mention "GDPR" or "data subject right" to be valid. Establish escalation paths and maintain a log of requests, responses, and timelines for demonstrating compliance.',
+                    dpiaStep: 'Step 5: Mitigation Measures',
+                    reference: 'GDPR Art.12(2); EDPB 1/2022; ICO SAR Guidance'
+                }
             ],
             'Security': [
-                'Conduct security assessment',
-                'Implement encryption for data at rest and in transit',
-                'Establish access control policies'
+                {
+                    action: 'Conduct comprehensive security risk assessment',
+                    detail: 'Per DPIA Step 4 (Risk Identification and Assessment), evaluate technical and organizational security measures against the state of the art, costs of implementation, and the nature, scope, context, and purposes of processing. Assess the likelihood and severity of risk to data subject rights and freedoms in the event of a breach. Use the DPIA risk matrix to determine residual risk levels.',
+                    dpiaStep: 'Step 4: Risk Identification and Assessment',
+                    reference: 'GDPR Art.32; ISO 27001; NIST Cybersecurity Framework'
+                },
+                {
+                    action: 'Implement encryption and pseudonymization for data at rest and in transit',
+                    detail: 'Deploy encryption using state-of-the-art algorithms (AES-256 for data at rest, TLS 1.3 for data in transit). Where full encryption is not feasible, implement pseudonymization to reduce identifiability and contain breach impact. Per DPIA Step 5 (Mitigation Measures), encryption and pseudonymization are key technical measures that reduce residual risk and may avoid the need for supervisory authority consultation.',
+                    dpiaStep: 'Step 5: Mitigation Measures',
+                    reference: 'GDPR Art.32(1)(a); Art.34(3)(a); ENISA Guidelines'
+                },
+                {
+                    action: 'Establish access control, logging, and monitoring framework',
+                    detail: 'Implement role-based access control (RBAC) with principle of least privilege. Maintain detailed processing logs capturing who accessed what data, when, and for what purpose. Deploy real-time anomaly detection for unauthorized access patterns. Per DPIA Step 7 (Ongoing Review), security measures must be tested, assessed, and evaluated regularly.',
+                    dpiaStep: 'Step 7: Ongoing Review',
+                    reference: 'GDPR Art.32(1)(b), Art.32(1)(d); Art.30(1)(g)'
+                }
             ],
             'Breach Notification': [
-                'Develop incident response plan',
-                'Establish breach notification procedures',
-                'Train staff on breach identification and reporting'
+                {
+                    action: 'Develop and document incident response plan (IRP)',
+                    detail: 'Establish a formal, written incident response plan covering: detection and identification procedures, containment and recovery processes, risk assessment methodology (using the DPIA risk matrix to assess likelihood and severity of impact), internal reporting escalation paths, clear roles and responsibilities, and communication templates for supervisory authorities and affected data subjects.',
+                    dpiaStep: 'Step 5: Mitigation Measures',
+                    reference: 'GDPR Art.33, Art.34; EDPB 9/2022 Guidelines'
+                },
+                {
+                    action: 'Establish 72-hour breach notification procedure to supervisory authority',
+                    detail: 'Create a triage and notification workflow that ensures: (1) breaches are assessed within 24 hours of discovery, (2) notifiable breaches are reported to the relevant supervisory authority within 72 hours, (3) documentation of all breaches (including non-notifiable) with reasons for the assessment. Where notification is delayed beyond 72 hours, the reasons for delay must accompany the notification.',
+                    dpiaStep: 'Step 6: DPO Advice and Sign-Off',
+                    reference: 'GDPR Art.33(1)-(5); EDPB 9/2022; WP250 Guidelines'
+                },
+                {
+                    action: 'Implement breach communication protocol for affected data subjects',
+                    detail: 'Per Art.34, when a breach is likely to result in high risk to data subject rights and freedoms, communicate without undue delay in clear, plain language describing: nature of the breach, likely consequences, measures taken/proposed, DPO contact, and recommendations to mitigate adverse effects. Exceptions apply only where: data was encrypted/unintelligible, subsequent measures ensure high risk no longer materializes, or individual communication would involve disproportionate effort (public communication instead).',
+                    dpiaStep: 'Step 5: Mitigation Measures',
+                    reference: 'GDPR Art.34(1)-(3); EDPB 9/2022'
+                }
             ],
             'DPIA': [
-                'Identify high-risk processing activities',
-                'Conduct DPIA for new processing activities',
-                'Document DPIA findings and mitigation measures'
+                {
+                    action: 'Screen all new and modified processing for DPIA triggers',
+                    detail: 'Per DPIA Step 1 (Screening and Scoping), assess whether the processing meets mandatory DPIA triggers: (a) systematic and extensive profiling with significant effects (Art.35(3)(a)), (b) large-scale processing of special category data or criminal convictions (Art.35(3)(b)), (c) systematic large-scale monitoring of publicly accessible areas (Art.35(3)(c)). Additionally apply the EDPB 9-criteria assessment — if 2 or more criteria apply, a DPIA is presumptively required.',
+                    dpiaStep: 'Step 1: Screening and Scoping',
+                    reference: 'GDPR Art.35(1), Art.35(3); EDPB WP248rev.01'
+                },
+                {
+                    action: 'Conduct full DPIA including all 7 steps with documented outputs',
+                    detail: 'Execute the complete DPIA process: (1) Screening, (2) Systematic Description with data flow mapping, (3) Necessity & Proportionality Assessment with legal basis validation, (4) Risk Identification & Assessment using the 5×5 risk matrix, (5) Mitigation Measures definition with residual risk calculation, (6) DPO Advice and Management Sign-Off, (7) Ongoing Review process with periodic assessment schedule and change-triggered review criteria. Each step must produce documented outputs.',
+                    dpiaStep: 'Step 1-7: Full DPIA Process',
+                    reference: 'GDPR Art.35(7); EDPB WP248rev.01; ISO 29134'
+                },
+                {
+                    action: 'Where residual high risk remains, consult supervisory authority before processing',
+                    detail: 'Per Art.36, if the DPIA indicates that processing would result in high risk in the absence of measures to mitigate the risk, the controller shall consult the supervisory authority prior to processing. Provide the authority with: (a) controller/processor responsibilities, (b) purposes and means of processing, (c) measures and safeguards, (d) DPO contact details, (e) the DPIA, (f) any other information requested. Processing must not commence during the consultation period (up to 8 weeks with possible 6-week extension).',
+                    dpiaStep: 'Step 6: DPO Advice and Sign-Off',
+                    reference: 'GDPR Art.36(1)-(3); EDPB WP248rev.01'
+                }
             ],
             'DPO': [
-                'Assess DPO appointment requirement',
-                'Designate and register DPO if required',
-                'Ensure DPO independence and resources'
+                {
+                    action: 'Assess DPO appointment requirement against statutory criteria',
+                    detail: 'Evaluate whether DPO designation is mandatory: (1) processing by a public authority/body (except courts), (2) core activities consisting of regular and systematic large-scale monitoring of data subjects, (3) core activities consisting of large-scale processing of special category data or criminal convictions. Even where not mandatory, voluntary DPO appointment is encouraged as best practice per WP29 and EDPB guidance.',
+                    dpiaStep: 'Step 1: Screening and Scoping',
+                    reference: 'GDPR Art.37(1); WP29 243rev.01 DPO Guidelines'
+                },
+                {
+                    action: 'Designate and register DPO ensuring independence and adequate resources',
+                    detail: 'The DPO must: (a) be designated on the basis of professional qualities and expert knowledge of data protection law, (b) operate independently without instruction regarding task execution, (c) not be dismissed or penalized for performing DPO tasks, (d) be provided adequate resources to carry out tasks (including time, budget, infrastructure, and access to personal data/processing operations), (e) report directly to the highest management level. Publish DPO contact details and register with the supervisory authority.',
+                    dpiaStep: 'Step 6: DPO Advice and Sign-Off',
+                    reference: 'GDPR Art.37(5)-(6), Art.38; WP29 243rev.01'
+                },
+                {
+                    action: 'Mandate DPO involvement in all DPIA and high-risk processing decisions',
+                    detail: 'The controller shall seek the advice of the DPO when conducting a DPIA (Art.35(2)). The DPO shall be involved, properly and in a timely manner, in all issues relating to the protection of personal data. Establish formal consultation workflows requiring DPO sign-off for: new processing activities, DPIAs, breach notifications, data subject rights escalations, and processor/vendor agreements involving personal data.',
+                    dpiaStep: 'Step 6: DPO Advice and Sign-Off',
+                    reference: 'GDPR Art.35(2), Art.38(1), Art.39; WP29 243rev.01'
+                }
             ],
             'Cross-border Transfer': [
-                'Map international data flows',
-                'Implement appropriate transfer mechanisms (SCCs, BCRs)',
-                'Conduct transfer impact assessments'
+                {
+                    action: 'Map all international personal data flows comprehensively',
+                    detail: 'Identify all scenarios where personal data crosses jurisdictional boundaries: direct transfers to third countries, onward transfers by processors/sub-processors, remote access from third countries, and hosting/backup in third-country data centers. Per DPIA Step 2, document the complete data flow including: controller→processor, processor→sub-processor chains, countries involved, transfer mechanism relied upon, and categories of data subjects and personal data transferred.',
+                    dpiaStep: 'Step 2: Systematic Description',
+                    reference: 'GDPR Art.44-46; EDPB 2/2020 Transfer Guidelines'
+                },
+                {
+                    action: 'Implement and document appropriate transfer safeguards (SCCs, BCRs, etc.)',
+                    detail: 'For each third-country transfer, identify and implement an appropriate Art.46 transfer mechanism: (a) Standard Contractual Clauses (2021 SCCs) — updated modular approach with Schrems II-compliant transfer impact assessment, (b) Binding Corporate Rules (BCRs) for intra-group transfers, (c) approved codes of conduct or certification mechanisms, (d) ad hoc contractual clauses authorized by supervisory authority. Adequacy decisions (Art.45) eliminate the need for additional safeguards where available.',
+                    dpiaStep: 'Step 5: Mitigation Measures',
+                    reference: 'GDPR Art.45, Art.46(2)-(3); EU 2021/914 SCCs; Schrems II (C-311/18)'
+                },
+                {
+                    action: 'Conduct Transfer Impact Assessment (TIA) for each third country',
+                    detail: 'Per EDPB 2/2020 recommendations following Schrems II: (1) map all transfers and identify transfer tools, (2) assess the law and practice of the third country — specifically whether public authorities can access the data in a way that undermines the effectiveness of the transfer tool, (3) identify and implement supplementary measures (encryption with key held outside third country, pseudonymization, split processing, contractual commitments) where necessary, (4) re-evaluate at appropriate intervals or upon material legal changes in the third country.',
+                    dpiaStep: 'Step 4: Risk Identification and Assessment',
+                    reference: 'GDPR Art.46(1); EDPB 2/2020; Schrems II (C-311/18)'
+                }
             ]
         };
 
-        return recs[control.domain] || [
-            'Review this requirement against current practices',
-            'Document compliance measures',
-            'Monitor regulatory guidance for updates'
-        ];
+        const domainRecs = baseRecs[control.domain];
+        if (!domainRecs) {
+            return [
+                `Conduct a targeted compliance review for "${control.requirement}" against current operational practices. Document the current state, identify gaps against the regulatory standard, and develop a remediation roadmap with assigned ownership and target completion dates.`,
+                `Integrate this requirement into the DPIA framework (Step 4: Risk Identification) by assessing the likelihood and severity of non-compliance impact on data subject rights and freedoms. Use the 5×5 DPIA risk matrix to determine the risk level and prioritize mitigation.`,
+                `Establish ongoing monitoring (per DPIA Step 7: Ongoing Review) with periodic compliance checks. Subscribe to regulatory guidance updates from relevant supervisory authorities and incorporate regulatory changes into the compliance program.`
+            ];
+        }
+
+        return domainRecs.map(r => `${r.action}: ${r.detail} [${r.dpiaStep} — ${r.reference}]`);
     }
 
     calculateRiskLevel(likelihood, impact) {
@@ -3578,29 +3737,30 @@ class ComplianceAnalysisSystem {
 
             <h4>DPIA Risk Assessment Framework</h4>
             <div class="risk-matrix">
-                <div class="risk-matrix-cell header">Likelihood ↓ / Impact →</div>
-                <div class="risk-matrix-cell header">Low</div>
-                <div class="risk-matrix-cell header">Medium</div>
-                <div class="risk-matrix-cell header">High</div>
-                <div class="risk-matrix-cell header">Severe</div>
+                ${(() => {
+                    const severityLevels = ['Negligible', 'Limited', 'Substantial', 'Severe', 'Very Severe'];
+                    const likelihoodLevels = ['Almost Certain', 'Likely', 'Possible', 'Unlikely', 'Remote'];
+                    const severityScore = [1, 2, 3, 4, 5];
+                    const likelihoodScore = [5, 4, 3, 2, 1];
 
-                <div class="risk-matrix-cell header">High</div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-medium">Medium</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-severe">Severe</span></div>
-
-                <div class="risk-matrix-cell header">Medium</div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-medium">Medium</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-medium">Medium</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
-
-                <div class="risk-matrix-cell header">Low</div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-low">Low</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-medium">Medium</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-medium">Medium</span></div>
-                <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
+                    let grid = '<div class="risk-matrix-cell header header-corner">Likelihood ↓ / Severity →</div>';
+                    for (const s of severityLevels) {
+                        grid += `<div class="risk-matrix-cell header">${s}</div>`;
+                    }
+                    for (let r = 0; r < likelihoodLevels.length; r++) {
+                        grid += `<div class="risk-matrix-cell header">${likelihoodLevels[r]}</div>`;
+                        for (let c = 0; c < severityLevels.length; c++) {
+                            const score = severityScore[c] * likelihoodScore[r];
+                            let level, cssClass;
+                            if (score >= 16) { level = 'Severe'; cssClass = 'risk-severe'; }
+                            else if (score >= 10) { level = 'High'; cssClass = 'risk-high'; }
+                            else if (score >= 5) { level = 'Medium'; cssClass = 'risk-medium'; }
+                            else { level = 'Low'; cssClass = 'risk-low'; }
+                            grid += `<div class="risk-matrix-cell"><span class="risk-badge ${cssClass}">${level}</span></div>`;
+                        }
+                    }
+                    return grid;
+                })()}
             </div>
 
             <h4>Detailed Gap Findings</h4>
