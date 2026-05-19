@@ -1431,6 +1431,9 @@ class ComplianceAnalysisSystem {
         document.getElementById('export-report').addEventListener('click', () => this.exportReport());
         document.getElementById('reset-all').addEventListener('click', () => this.resetAll());
 
+        // Phase 4: Privacy Policy Compliance Review
+        this.initPrivacyReview();
+
         // Knowledge Base Panel
         document.getElementById('toggle-kb').addEventListener('click', () => this.toggleKBPanel());
         document.getElementById('close-kb').addEventListener('click', () => this.closeKBPanel());
@@ -2457,86 +2460,197 @@ class ComplianceAnalysisSystem {
         return gaps;
     }
 
-    async analyzeGap(control, businessInfo) {
-        // Analyze gap based on text inputs using keyword matching
-        const domain = control.domain.toLowerCase();
-        const requirement = control.requirement.toLowerCase();
+    // Domain-to-Phase3 question mapping for risk assessment logic
+    getDomainQuestionMap() {
+        return {
+            'Data Processing Principles': [
+                'orgStructure', 'privacyCertification', 'privacyAudit', 'internalStandards',
+                'dataClassification', 'thirdPartyCheck', 'disposalRecords', 'piInventory',
+                'collectionEvaluation', 'processingMethods', 'internalSharing',
+                'entrustedContracts', 'entrustedSupervision'
+            ],
+            'Lawful Basis': [
+                'orgStructure', 'collectionEvaluation', 'processingMethods'
+            ],
+            'Consent': [
+                'thirdPartyConsent'
+            ],
+            'Transparency': [
+                'privacyPolicy', 'complaintMechanism'
+            ],
+            'Data Subject Rights': [
+                'rightsResponseTeam', 'deletionMechanism', 'rightsResponse'
+            ],
+            'Security': [
+                'internalTransmission', 'accessControl', 'displayObfuscation',
+                'deletionMechanism', 'processingLogs', 'storageMethod', 'platformType',
+                'securityMechanisms', 'backupStatus', 'dataClassification'
+            ],
+            'Breach Notification': [
+                'emergencyPlan', 'backupStatus'
+            ],
+            'DPIA': [
+                'periodicPipia', 'pipiaResults', 'entrustedPipia'
+            ],
+            'DPO': [
+                'privacyOfficer'
+            ],
+            'Cross-border Transfer': [
+                'thirdPartySharing', 'storageLocation', 'dataSync',
+                'thirdPartySharingMain', 'recipientSupervision', 'recipientContracts'
+            ]
+        };
+    }
 
-        // Define keyword categories for each dimension
-        const orgKeywords = ['structure', 'team', 'officer', 'dpo', 'policy', 'documentation', 'training', 'audit'];
-        const securityKeywords = ['security', 'encrypt', 'access', 'control', 'safeguard', 'protection', 'firewall', 'mask', 'obfusc', 'deletion', 'anonymiz', 'storage'];
-        const processKeywords = ['consent', 'notice', 'privacy policy', 'right', 'access', 'deletion', 'portability', 'piria', 'dpia', 'assessment', 'collection', 'purpose'];
+    // Evaluate "Yes" answer quality using DPIA methodology criteria
+    evaluateYesAnswerQuality(businessInfo, relatedKeys) {
+        const dpia = this.getEnhancedDPIA();
+        let totalDetailLength = 0;
+        let answeredCount = 0;
+        let substantiveCount = 0;
 
-        // Helper to get text from Yes/No answer
-        const getAnswerText = (item) => item ? `${item.answer} ${item.details || ''}` : '';
+        for (const key of relatedKeys) {
+            const item = businessInfo[key];
+            if (!item || item.answer !== 'Yes') continue;
+            answeredCount++;
+            const detail = (item.details || '').trim();
+            totalDetailLength += detail.length;
 
-        // Convert all business info to lowercase for analysis
-        const orgText = (getAnswerText(businessInfo.orgStructure) + ' ' + getAnswerText(businessInfo.privacyOfficer) + ' ' + getAnswerText(businessInfo.privacyCertification) + ' ' + getAnswerText(businessInfo.privacyAudit) + ' ' + getAnswerText(businessInfo.internalStandards) + ' ' + getAnswerText(businessInfo.dataClassification) + ' ' + getAnswerText(businessInfo.thirdPartyCheck) + ' ' + getAnswerText(businessInfo.emergencyPlan) + ' ' + getAnswerText(businessInfo.disposalRecords) + ' ' + getAnswerText(businessInfo.periodicPipia) + ' ' + getAnswerText(businessInfo.rightsResponseTeam) + ' ' + getAnswerText(businessInfo.complaintMechanism)).toLowerCase();
-        const securityText = (getAnswerText(businessInfo.piInventory) + ' ' + getAnswerText(businessInfo.internalTransmission) + ' ' + getAnswerText(businessInfo.thirdPartySharing) + ' ' + getAnswerText(businessInfo.accessControl) + ' ' + getAnswerText(businessInfo.displayObfuscation) + ' ' + getAnswerText(businessInfo.deletionMechanism) + ' ' + getAnswerText(businessInfo.processingLogs) + ' ' + getAnswerText(businessInfo.storageLocation) + ' ' + getAnswerText(businessInfo.storageMethod) + ' ' + getAnswerText(businessInfo.platformType) + ' ' + getAnswerText(businessInfo.dataSync) + ' ' + getAnswerText(businessInfo.securityMechanisms) + ' ' + getAnswerText(businessInfo.backupStatus)).toLowerCase();
-        const processText = (getAnswerText(businessInfo.collectionEvaluation) + ' ' + getAnswerText(businessInfo.processingMethods) + ' ' + getAnswerText(businessInfo.privacyPolicy) + ' ' + getAnswerText(businessInfo.rightsResponse) + ' ' + getAnswerText(businessInfo.pipiaResults) + ' ' + getAnswerText(businessInfo.thirdPartySharingMain) + ' ' + getAnswerText(businessInfo.thirdPartyConsent) + ' ' + getAnswerText(businessInfo.recipientSupervision) + ' ' + getAnswerText(businessInfo.recipientContracts) + ' ' + getAnswerText(businessInfo.internalSharing) + ' ' + getAnswerText(businessInfo.entrustedPipia) + ' ' + getAnswerText(businessInfo.entrustedContracts) + ' ' + getAnswerText(businessInfo.entrustedSupervision)).toLowerCase();
-
-        // Calculate relevance scores based on keyword matching
-        let orgScore = orgKeywords.filter(kw => orgText.includes(kw)).length;
-        let securityScore = securityKeywords.filter(kw => securityText.includes(kw)).length;
-        let processScore = processKeywords.filter(kw => processText.includes(kw)).length;
-
-        // Normalize scores (0-3 scale)
-        const normalizeScore = (score, max) => Math.min(3, Math.round((score / max) * 3));
-        orgScore = normalizeScore(orgScore, 4);
-        securityScore = normalizeScore(securityScore, 6);
-        processScore = normalizeScore(processScore, 5);
-
-        // Determine which dimension is most relevant to this control
-        let relevantScore = 0;
-        if (domain.includes('security') || domain.includes('safeguard') || domain.includes('technical') ||
-            requirement.includes('encrypt') || requirement.includes('access') || requirement.includes('protect')) {
-            relevantScore = securityScore;
-        } else if (domain.includes('dpo') || domain.includes('administrative') || domain.includes('organization') ||
-                   requirement.includes('officer') || requirement.includes('audit')) {
-            relevantScore = orgScore;
-        } else if (domain.includes('process') || domain.includes('transparency') || domain.includes('consent') ||
-                   domain.includes('rights') || domain.includes('breach') || domain.includes('policy') ||
-                   requirement.includes('consent') || requirement.includes('notice') || requirement.includes('right')) {
-            relevantScore = processScore;
-        } else {
-            // For other domains, use average
-            relevantScore = Math.round((orgScore + securityScore + processScore) / 3);
+            // Check for substantive content: mentions specific measures, frameworks, roles, timelines
+            const substantivePatterns = [
+                /\b(policy|procedure|process|framework|standard|guideline|protocol)\b/i,
+                /\b(implement|establish|conduct|review|assess|monitor|audit|train)\b/i,
+                /\b(dpo|officer|team|committee|department|counsel)\b/i,
+                /\b(encrypt|access.control|firewall|backup|log|monitor|alert)\b/i,
+                /\b(consent|notice|request|response|right|deletion|portability)\b/i,
+                /\b(annual|quarterly|monthly|regular|ongoing|continuous)\b/i,
+                /\b(article|section|regulation|compliance|legal|statutory)\b/i,
+                /\b(third.party|vendor|processor|sub.processor|recipient)\b/i,
+                /\b(scc|bcrs|transfer.impact|adequacy|schrems)\b/i,
+                /\b(iso|nist|soc2|soc.2|iso.27001|iso.27701)\b/i
+            ];
+            const matchCount = substantivePatterns.filter(p => p.test(detail)).length;
+            if (matchCount >= 2) substantiveCount++;
         }
 
-        // Determine gap status
-        let likelihood = 'Medium';
-        let impact = 'Medium';
-        let hasGap = true;
-        let recommendations = [];
+        if (answeredCount === 0) return { score: 0, level: 'None', detail: 'No related questions answered Yes' };
 
-        if (relevantScore >= 3) {
-            hasGap = false;
-            likelihood = 'Low';
-        } else if (relevantScore === 2) {
-            hasGap = control.mandatory === 'Yes' && this.hasSpecificGap(control, orgText, securityText, processText);
-            likelihood = hasGap ? 'Medium' : 'Low';
-        } else if (relevantScore === 1) {
-            hasGap = true;
-            likelihood = control.mandatory === 'Yes' ? 'High' : 'Medium';
+        const avgLength = totalDetailLength / answeredCount;
+        const substantiveRatio = substantiveCount / answeredCount;
+
+        // Score: 0-5 scale aligned to DPIA risk matrix
+        let score, level, detail;
+        if (substantiveRatio >= 0.8 && avgLength >= 200) {
+            score = 5; level = 'Comprehensive';
+            detail = `Systematic controls documented across ${answeredCount} area(s) with specific measures, frameworks, and operational details. Demonstrates mature compliance program aligned with DPIA Steps 4-7 requirements.`;
+        } else if (substantiveRatio >= 0.6 && avgLength >= 120) {
+            score = 4; level = 'Good';
+            detail = `Well-documented controls with operational specifics in ${answeredCount} area(s). Indicates structured compliance approach with verifiable measures. Minor gaps in cross-referencing with DPIA documentation standards.`;
+        } else if (substantiveRatio >= 0.4 && avgLength >= 60) {
+            score = 3; level = 'Adequate';
+            detail = `Basic compliance measures described in ${answeredCount} area(s). Controls exist but documentation lacks specificity, measurable criteria, or systematic framework alignment. Recommend DPIA Step 4 risk identification formalization.`;
+        } else if (avgLength >= 20) {
+            score = 2; level = 'Minimal';
+            detail = `Limited detail provided in ${answeredCount} area(s). Answers indicate awareness but insufficient implementation evidence. High risk of regulatory challenge due to lack of documented compliance measures per DPIA Step 2-3 requirements.`;
         } else {
+            score = 1; level = 'Insufficient';
+            detail = `Affirmative answer provided without substantive implementation detail in ${answeredCount} area(s). Mere acknowledgment without documented measures does not satisfy regulatory burden of proof (accountability principle). Equivalent to undocumented compliance posture.`;
+        }
+
+        return { score, level, detail, answeredCount, avgLength: Math.round(avgLength), substantiveRatio };
+    }
+
+    async analyzeGap(control, businessInfo) {
+        const dpia = this.getEnhancedDPIA();
+        const domain = control.domain;
+        const domainMap = this.getDomainQuestionMap();
+        const relatedKeys = domainMap[domain] || [];
+
+        // If no mapped questions, fall back to generic evaluation
+        if (relatedKeys.length === 0) {
+            const fallbackImpact = control.mandatory === 'Yes' ? 'High' : 'Medium';
+            return {
+                clause: control.clause,
+                domain: control.domain,
+                requirement: control.requirement,
+                mandatory: control.mandatory,
+                hasGap: true,
+                likelihood: 'Medium',
+                impact: fallbackImpact,
+                riskLevel: this.calculateRiskLevel('Medium', fallbackImpact),
+                recommendations: this.generateRecommendations(control),
+                penalty: control.penalty,
+                analysisBasis: 'Generic evaluation — no Phase 3 question mapping available for this domain',
+                kbReferences: await this.searchKnowledgeBaseForGap(control, true)
+            };
+        }
+
+        // Count No/Yes answers across related questions
+        const relatedItems = relatedKeys.map(key => ({ key, item: businessInfo[key] })).filter(x => x.item && x.item.answer);
+        const noAnswers = relatedItems.filter(x => x.item.answer === 'No');
+        const yesAnswers = relatedItems.filter(x => x.item.answer === 'Yes');
+        const noRatio = relatedItems.length > 0 ? noAnswers.length / relatedItems.length : 0;
+
+        // Evaluate Yes answer quality
+        const qualityResult = this.evaluateYesAnswerQuality(businessInfo, relatedKeys);
+
+        // Determine penalty severity for impact scoring
+        const penaltyText = (control.penalty || '').toLowerCase();
+        let penaltySeverity = 1; // 1-5 scale
+        if (penaltyText.includes('5%') || penaltyText.includes('severe') || penaltyText.includes('crore') || penaltyText.includes('criminal')) {
+            penaltySeverity = 5;
+        } else if (penaltyText.includes('4%') || penaltyText.includes('€20') || penaltyText.includes('million')) {
+            penaltySeverity = 4;
+        } else if (penaltyText.includes('2%') || penaltyText.includes('significant')) {
+            penaltySeverity = 3;
+        } else if (penaltyText.includes('fine') || penaltyText.includes('penalty')) {
+            penaltySeverity = 2;
+        }
+
+        // === RISK DETERMINATION LOGIC ===
+        // RULE 1: No answers = HIGH risk compliance gaps
+        // RULE 2: Yes answers evaluated via DPIA methodology + quality assessment
+
+        let likelihood, impact, hasGap, analysisBasis;
+
+        if (noRatio >= 0.5) {
+            // Majority or significant portion of related questions answered No → HIGH RISK
+            hasGap = true;
+            likelihood = noRatio >= 0.75 ? 'Very High' : 'High';
+            impact = control.mandatory === 'Yes' ? (penaltySeverity >= 4 ? 'Severe' : 'High') : 'Medium';
+            analysisBasis = `Phase 3 Non-Compliance: ${noAnswers.length}/${relatedItems.length} related questions answered "No" (${Math.round(noRatio * 100)}%). Legal/regulatory requirement not met — this constitutes a material compliance gap. ${noAnswers.map(x => x.key).join(', ')} not implemented.`;
+        } else if (noAnswers.length > 0) {
+            // Some No answers but less than 50% — partial gap
             hasGap = true;
             likelihood = 'High';
-        }
-
-        // Calculate impact based on penalty severity
-        if (control.mandatory === 'Yes') {
-            impact = control.penalty.includes('4%') || control.penalty.includes('5%') ||
-                     control.penalty.includes('Severe') || control.penalty.includes('crore') ?
-                     'Severe' : 'High';
+            impact = control.mandatory === 'Yes' ? 'High' : 'Medium';
+            const noKeys = noAnswers.map(x => x.key).join(', ');
+            const yesKeys = yesAnswers.map(x => x.key).join(', ');
+            analysisBasis = `Phase 3 Partial Compliance: ${noAnswers.length}/${relatedItems.length} related questions answered "No" (${noKeys}). ${yesAnswers.length} areas compliant (${yesKeys}). Non-compliant areas represent specific, identifiable gaps requiring targeted remediation.`;
+        } else if (qualityResult.score >= 4) {
+            // All Yes with good/comprehensive quality → low risk, potentially compliant
+            hasGap = control.mandatory === 'Yes' && qualityResult.score < 5;
+            likelihood = qualityResult.score >= 5 ? 'Very Low' : 'Low';
+            impact = control.mandatory === 'Yes' ? (penaltySeverity >= 4 ? 'Medium' : 'Low') : 'Low';
+            analysisBasis = `Phase 3 Compliance Verified: All ${relatedItems.length} related questions answered "Yes" with ${qualityResult.level.toLowerCase()} implementation detail (avg ${qualityResult.avgLength} chars/answer, ${Math.round(qualityResult.substantiveRatio * 100)}% substantive). ${qualityResult.detail}`;
+        } else if (qualityResult.score >= 2) {
+            // All Yes with adequate/minimal quality → medium risk
+            hasGap = true;
+            likelihood = qualityResult.score >= 3 ? 'Medium' : 'High';
+            impact = control.mandatory === 'Yes' ? (penaltySeverity >= 4 ? 'High' : 'Medium') : 'Medium';
+            analysisBasis = `Phase 3 Compliance with Gaps: All ${relatedItems.length} related questions answered "Yes" but implementation quality is ${qualityResult.level.toLowerCase()} (avg ${qualityResult.avgLength} chars/answer, ${Math.round(qualityResult.substantiveRatio * 100)}% substantive). ${qualityResult.detail}`;
         } else {
-            impact = relevantScore >= 2 ? 'Medium' : 'High';
+            // All Yes but insufficient detail → high risk
+            hasGap = true;
+            likelihood = 'High';
+            impact = control.mandatory === 'Yes' ? (penaltySeverity >= 3 ? 'High' : 'Medium') : 'Medium';
+            analysisBasis = `Phase 3 Compliance Not Verified: ${relatedItems.length} related questions answered "Yes" but implementation detail is insufficient (avg ${qualityResult.avgLength} chars/answer). ${qualityResult.detail}`;
         }
 
-        if (hasGap) {
-            recommendations = this.generateRecommendations(control);
-        }
+        // Use DPIA 5×5 risk matrix levels for final risk mapping
+        const riskLevel = this.calculateRiskLevel(likelihood, impact);
 
-        // Search knowledge base for relevant references
+        const recommendations = hasGap ? this.generateRecommendations(control) : [];
         const kbReferences = await this.searchKnowledgeBaseForGap(control, hasGap);
 
         return {
@@ -2547,10 +2661,13 @@ class ComplianceAnalysisSystem {
             hasGap: hasGap,
             likelihood: likelihood,
             impact: impact,
-            riskLevel: this.calculateRiskLevel(likelihood, impact),
+            riskLevel: riskLevel,
             recommendations: recommendations,
             penalty: control.penalty,
-            relevantScore: relevantScore,
+            analysisBasis: analysisBasis,
+            qualityScore: qualityResult.score,
+            noCount: noAnswers.length,
+            yesCount: yesAnswers.length,
             kbReferences: kbReferences
         };
     }
@@ -2588,34 +2705,6 @@ class ComplianceAnalysisSystem {
         }
 
         return [];
-    }
-
-    hasSpecificGap(control, orgText, securityText, processText) {
-        // Additional check to determine if there's a specific gap despite general maturity
-        const domain = control.domain.toLowerCase();
-        const requirement = control.requirement.toLowerCase();
-
-        // Check for specific gaps based on control type
-        if (domain.includes('security') || requirement.includes('encrypt')) {
-            return !securityText.includes('encrypt') && !securityText.includes('tls') && !securityText.includes('ssl');
-        }
-        if (domain.includes('access') || requirement.includes('access')) {
-            return !securityText.includes('access') && !securityText.includes('rbac') && !securityText.includes('control');
-        }
-        if (domain.includes('dpo') || requirement.includes('officer')) {
-            return !orgText.includes('dpo') && !orgText.includes('officer') && !orgText.includes('protection');
-        }
-        if (domain.includes('consent') || requirement.includes('consent')) {
-            return !processText.includes('consent') && !processText.includes('agree');
-        }
-        if (domain.includes('breach') || requirement.includes('breach') || requirement.includes('incident')) {
-            return !processText.includes('breach') && !processText.includes('incident') && !processText.includes('response');
-        }
-        if (domain.includes('rights') || requirement.includes('access') || requirement.includes('deletion')) {
-            return !processText.includes('right') && !processText.includes('access') && !processText.includes('deletion');
-        }
-
-        return true; // Default to gap if specific check is inconclusive
     }
 
     generateRecommendations(control) {
@@ -3794,6 +3883,12 @@ class ComplianceAnalysisSystem {
                         ${gap.hasGap ? `
                             <p><strong>Likelihood:</strong> ${gap.likelihood}</p>
                             <p><strong>Impact:</strong> ${gap.impact}</p>
+                            ${gap.analysisBasis ? `
+                            <div class="analysis-basis-box">
+                                <div class="analysis-basis-header">Risk Determination Reasoning</div>
+                                <div class="analysis-basis-body">${gap.analysisBasis}</div>
+                            </div>
+                            ` : ''}
                             <div class="classification-box classification-${classification.classification.toLowerCase()}">
                                 <p><strong>Classification:</strong> ${classification.classification}</p>
                                 <p><strong>Priority:</strong> ${classification.priority}</p>
@@ -4101,6 +4196,249 @@ ${g.recommendations.map(r => `- ${r}`).join('\n')}
 `;
 
         return md;
+    }
+
+    // ============================================================
+    // Phase 4: Privacy Policy Compliance Review
+    // ============================================================
+
+    initPrivacyReview() {
+        const uploadArea = document.getElementById('privacy-upload-area');
+        const fileInput = document.getElementById('privacy-file-input');
+        const browseBtn = document.getElementById('privacy-browse-btn');
+        const removeBtn = document.getElementById('privacy-remove-file');
+        const analyzeBtn = document.getElementById('analyze-privacy');
+        const selectedFileDiv = document.getElementById('privacy-selected-file');
+        const selectedFilename = document.getElementById('privacy-selected-filename');
+
+        let selectedFile = null;
+
+        // Browse button click
+        browseBtn.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('click', (e) => {
+            if (e.target !== browseBtn) fileInput.click();
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('upload-area-dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('upload-area-dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('upload-area-dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleFile(files[0]);
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
+        });
+
+        function handleFile(file) {
+            const allowedTypes = ['application/pdf', 'text/plain'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Only PDF and TXT files are supported.');
+                return;
+            }
+            if (file.size > 16 * 1024 * 1024) {
+                alert('File is too large. Maximum file size is 16MB.');
+                return;
+            }
+            selectedFile = file;
+            selectedFilename.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+            selectedFileDiv.classList.remove('hidden');
+            analyzeBtn.disabled = false;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Remove file button
+        removeBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            selectedFileDiv.classList.add('hidden');
+            analyzeBtn.disabled = true;
+        });
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', () => {
+            if (!selectedFile) return;
+            this.runPrivacyReview(selectedFile);
+        });
+    }
+
+    async runPrivacyReview(file) {
+        const loadingEl = document.getElementById('privacy-loading');
+        const uploadEl = document.getElementById('privacy-review-upload');
+        const resultEl = document.getElementById('privacy-review-result');
+        const analyzeBtn = document.getElementById('analyze-privacy');
+
+        analyzeBtn.disabled = true;
+        loadingEl.classList.remove('hidden');
+        resultEl.classList.add('hidden');
+
+        const formData = new FormData();
+        formData.append('policyFile', file);
+
+        try {
+            const response = await fetch('/api/privacy-review', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            loadingEl.classList.add('hidden');
+
+            if (!data.success) {
+                this.renderPrivacyError(data.error || 'Analysis failed');
+                return;
+            }
+
+            this.renderPrivacyResult(data);
+            resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (error) {
+            loadingEl.classList.add('hidden');
+            this.renderPrivacyError('Network error: ' + error.message);
+        }
+    }
+
+    renderPrivacyResult(data) {
+        const resultEl = document.getElementById('privacy-review-result');
+
+        const riskColorMap = {
+            'Low Risk': 'green',
+            'Medium Risk': 'yellow',
+            'High Risk': 'red'
+        };
+        const riskColor = riskColorMap[data.riskLevel] || 'red';
+        const riskColorHex = riskColor === 'green' ? '#059669' : riskColor === 'yellow' ? '#FFE700' : '#DC143C';
+
+        const scorePercentage = data.score;
+        let scoreLabel = scorePercentage >= 80 ? 'Strong Compliance' : scorePercentage >= 50 ? 'Partial Compliance' : 'Weak Compliance';
+
+        let html = `
+            <div class="privacy-result-header">
+                <div class="privacy-result-title">
+                    <h3>Privacy Policy Compliance Report</h3>
+                    <p class="privacy-result-meta">File: ${this.escapeHtml(data.originalFilename || data.filename)}</p>
+                </div>
+                <button class="btn-outline" onclick="window.location.reload()">
+                    <span class="btn-icon">🔄</span>
+                    New Review
+                </button>
+            </div>
+
+            <div class="privacy-score-grid">
+                <div class="privacy-score-card" style="border-left: 6px solid ${riskColorHex};">
+                    <div class="privacy-score-value" style="color: ${riskColorHex};">${scorePercentage}/100</div>
+                    <div class="privacy-score-label">Compliance Score — ${scoreLabel}</div>
+                </div>
+                <div class="privacy-score-card" style="border-left: 6px solid ${riskColorHex};">
+                    <div class="privacy-score-value risk-${riskColor}">${data.riskLevel}</div>
+                    <div class="privacy-score-label">Risk Classification</div>
+                </div>
+                <div class="privacy-score-card">
+                    <div class="privacy-score-value">${data.summary.total}</div>
+                    <div class="privacy-score-label">Rules Checked</div>
+                </div>
+                <div class="privacy-score-card">
+                    <div class="privacy-score-value" style="color: #DC143C;">${data.summary.missing + data.summary.risky}</div>
+                    <div class="privacy-score-label">Issues Found (${data.summary.missing} Missing + ${data.summary.risky} Risky)</div>
+                </div>
+            </div>
+
+            <div class="privacy-status-bar">
+                <div class="privacy-status-item status-compliant">
+                    <span class="privacy-status-count">${data.summary.compliant}</span>
+                    <span class="privacy-status-label">Compliant</span>
+                </div>
+                <div class="privacy-status-item status-risky">
+                    <span class="privacy-status-count">${data.summary.risky}</span>
+                    <span class="privacy-status-label">Risky</span>
+                </div>
+                <div class="privacy-status-item status-missing">
+                    <span class="privacy-status-count">${data.summary.missing}</span>
+                    <span class="privacy-status-label">Missing</span>
+                </div>
+            </div>
+
+            <div class="privacy-findings">
+                <h4>Detailed Compliance Findings</h4>
+                <div class="privacy-findings-table-wrapper">
+                    <table class="privacy-findings-table">
+                        <thead>
+                            <tr>
+                                <th style="width:5%;">#</th>
+                                <th style="width:18%;">Rule</th>
+                                <th style="width:12%;">Status</th>
+                                <th style="width:40%;">Evidence</th>
+                                <th style="width:25%;">Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        data.results.forEach((r, i) => {
+            const statusClass = r.status === 'Compliant' ? 'compliant' : r.status === 'Risky' ? 'risky' : 'missing';
+            const confidence = Math.round(r.confidence * 100);
+            const evidenceHtml = r.evidence !== 'N/A'
+                ? `<span class="evidence-quote">"${this.escapeHtml(r.evidence)}"</span>`
+                : `<span class="evidence-none">No evidence found</span>`;
+
+            html += `
+                <tr class="finding-row finding-${statusClass}">
+                    <td>${r.rule_id}</td>
+                    <td>
+                        <strong>${r.rule_name}</strong>
+                        <div class="rule-description">${r.description}</div>
+                    </td>
+                    <td>
+                        <span class="privacy-status-tag status-tag-${statusClass}">${r.status}</span>
+                        <span class="confidence-text">${confidence}%</span>
+                    </td>
+                    <td>${evidenceHtml}</td>
+                    <td>${r.status !== 'Compliant' ? '<span class="recommendation-icon">⚠️</span> ' : '<span class="recommendation-icon">✓</span> '}${r.recommendation}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="privacy-disclaimer">
+                <strong>Disclaimer:</strong> This analysis is powered by CompliAI — an automated, rule-based compliance checker. It provides a preliminary assessment based on keyword pattern matching and does not constitute legal advice. Organizations should consult a qualified legal professional for a complete compliance review.
+            </div>
+        `;
+
+        resultEl.innerHTML = html;
+        resultEl.classList.remove('hidden');
+    }
+
+    renderPrivacyError(message) {
+        const resultEl = document.getElementById('privacy-review-result');
+        const analyzeBtn = document.getElementById('analyze-privacy');
+        resultEl.innerHTML = `
+            <div class="privacy-error">
+                <span class="privacy-error-icon">⚠️</span>
+                <div>
+                    <strong>Analysis Failed</strong>
+                    <p>${this.escapeHtml(message)}</p>
+                </div>
+            </div>
+        `;
+        resultEl.classList.remove('hidden');
+        analyzeBtn.disabled = false;
     }
 
     resetAll() {

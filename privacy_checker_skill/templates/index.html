@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompliAI - Compliance Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Top Banner Disclaimer -->
+    <div class="top-banner">
+        ⚠️ CompliAI provides an automated, AI-assisted compliance assessment and does not constitute legal advice.
+    </div>
+
+    <div class="container upload-container">
+        <header class="main-header">
+            <h1 class="logo">Compli<span>AI</span></h1>
+            <p class="tagline">Automated Privacy Policy Compliance Checker</p>
+        </header>
+
+        <div class="card">
+            <h2 style="text-align: center;">Analyze Your Policy</h2>
+            <p class="description">Upload your Privacy Policy (PDF or TXT) to get an instant compliance report.</p>
+
+            {% if error %}
+            <div class="alert error">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form action="/analyze" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="file-drop-area">
+                    <span class="fake-btn">Choose File</span>
+                    <span class="file-msg">or drag and drop here</span>
+                    <input class="file-input" type="file" name="file" accept=".pdf,.txt" required>
+                </div>
+                <button type="submit" class="btn-primary" id="analyzeBtn">Analyze Document</button>
+            </form>
+
+            <div class="loading" id="loadingSpinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing document...</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 CompliAI. For educational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        const fileInput = document.querySelector('.file-input');
+        const fileMsg = document.querySelector('.file-msg');
+        const form = document.getElementById('uploadForm');
+        const loading = document.getElementById('loadingSpinner');
+        const btn = document.getElementById('analyzeBtn');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileMsg.textContent = fileInput.files[0].name;
+            }
+        });
+
+        form.addEventListener('submit', () => {
+            btn.style.display = 'none';
+            loading.style.display = 'block';
+        });
+    </script>
+</body>
+
+</html>

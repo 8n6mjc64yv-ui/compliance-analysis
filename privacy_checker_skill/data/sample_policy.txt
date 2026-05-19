@@ -1,0 +1,24 @@
+
+PRIVACY POLICY
+Effective Date: January 1, 2024
+
+1. Introduction
+We value your privacy. This policy explains how we handle your data.
+
+2. Data We Collect
+We collect email addresses and usage data to improve our services.
+
+3. Consent
+By using our app, you agree to this policy.
+
+4. Data Retention
+We keep your data for as long as necessary to provide our services, but typically no longer than 5 years.
+
+5. Third-Party Sharing
+We may share your data with third-party partners for marketing purposes.
+
+6. Security
+We use industry-standard encryption to protect your data.
+
+7. Contact Us
+If you have questions, email us at support@example.com.

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompliAI Report - {{ filename }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Top Banner Disclaimer -->
+    <div class="top-banner">
+        ⚠️ CompliAI provides an automated, AI-assisted compliance assessment and does not constitute legal advice.
+    </div>
+
+    <div class="container">
+        <header class="main-header"
+            style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="text-align: left;">
+                <h1 class="logo" style="font-size: 1.8rem;">Compli<span>AI</span> Analysis Report</h1>
+                <p class="tagline">Generated on {{ generated_at }} for <strong>{{ filename }}</strong></p>
+            </div>
+            <div>
+                <button onclick="window.print()" class="btn-primary print-btn" style="width: auto;">🖨️ Take Printout
+                </button>
+                <a href="/" class="btn-primary"
+                    style="width: auto; background-color: var(--secondary); text-decoration: none; margin-left: 10px;">New
+                    Analysis</a>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="dashboard-grid">
+            <div class="stat-card score">
+                <div class="stat-label">Compliance Score</div>
+                <div class="stat-value">{{ score }}/100</div>
+            </div>
+            <div class="stat-card risk-{{ risk_level.split(' ')[0] }}">
+                <div class="stat-label">Risk Level</div>
+                <div class="stat-value" style="font-size: 1.8rem; color: inherit;">{{ risk_level }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Rules Checked</div>
+                <div class="stat-value">{{ total_rules }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Issues Found</div>
+                <div class="stat-value" style="color: var(--danger);">{{ issues|length }}</div>
+            </div>
+        </div>
+
+        <!-- Detailed Findings -->
+        <div class="card">
+            <h2>Detailed Findings</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Rule</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 40%;">Evidence Found</th>
+                        <th style="width: 25%;">Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>
+                            <strong>{{ result.rule_name }}</strong><br>
+                            <span style="font-size: 0.8rem; color: #64748b;">{{ result.description }}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ result.status }}">
+                                {{ result.status }} ({{ (result.confidence * 100)|int }}%)
+                            </span>
+                        </td>
+                        <td>
+                            {% if result.evidence != 'N/A' %}
+                            <div class="evidence-text">"{{ result.evidence }}"</div>
+                            {% else %}
+                            <span style="color: #94a3b8; font-style: italic;">No evidence found.</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="recommendation-text">
+                                {% if result.status == 'Compliant' %}
+                                <span style="color: var(--success);">✓ Looks good.</span>
+                                {% else %}
+                                ⚠️ {{ result.recommendation }}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer Disclaimer -->
+        <footer style="border-top: 1px solid var(--border); padding-top: 2rem;">
+            <h3>Disclaimer</h3>
+            <p>
+                CompliAI provides an automated, limited audit based on keyword patterns.
+                <strong>It does not constitute legal advice.</strong>
+                Organizations should consult a legal professional for a full compliance review.
+            </p>
+            <p style="margin-top: 1rem;">&copy; 2025 CompliAI.</p>
+        </footer>
+    </div>
+
+</body>
+
+</html>

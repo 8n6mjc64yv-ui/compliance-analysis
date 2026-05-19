@@ -61,6 +61,20 @@
                 <div class="ey-dropdown-item">Identify compliance gaps with risk-level classification (Low/Medium/High/Severe)</div>
                 <div class="ey-dropdown-item">Generate prioritized remediation roadmap with actionable recommendations</div>
             </div>
+
+            <div class="ey-nav-item phase-nav-item" data-phase="4">
+                <div class="ey-nav-indicator"></div>
+                <div class="ey-nav-item-content">
+                    <span class="ey-nav-title">Privacy Policy Review</span>
+                    <span class="ey-nav-subtitle">Phase 4</span>
+                </div>
+                <span class="ey-nav-chevron">▸</span>
+            </div>
+            <div class="ey-nav-dropdown" data-phase-dropdown="4">
+                <div class="ey-dropdown-item">Upload privacy policy document for automated compliance audit</div>
+                <div class="ey-dropdown-item">AI-powered rule-based analysis against GDPR principles</div>
+                <div class="ey-dropdown-item">Generate compliance score, risk classification, and audit report</div>
+            </div>
         </nav>
     </aside>
 
@@ -95,6 +109,11 @@
             <div class="progress-step" data-phase="3">
                 <span class="step-number">3</span>
                 <span class="step-label">Gap Analysis</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-phase="4">
+                <span class="step-number">4</span>
+                <span class="step-label">Privacy Policy Review</span>
             </div>
         </div>
 
@@ -663,6 +682,46 @@
                 Generate Gap Analysis Report
             </button>
             <div id="gaps-result" class="result-container hidden"></div>
+        </section>
+
+        <!-- Phase 4: Privacy Policy Compliance Review -->
+        <section id="phase4" class="phase-section">
+            <div class="section-header">
+                <h2>Phase Four: Privacy Policy Compliance Review</h2>
+                <span class="agent-badge">compliai agent</span>
+            </div>
+            <p class="section-intro">Upload a privacy policy document (PDF or TXT) for automated compliance auditing against core GDPR privacy principles. The analysis is powered by CompliAI — a rule-based, explainable compliance checker.</p>
+
+            <div class="privacy-review-container" id="privacy-review-upload">
+                <div class="upload-area" id="privacy-upload-area">
+                    <div class="upload-content">
+                        <span class="upload-icon">🔒</span>
+                        <p><strong>Upload Privacy Policy Document</strong></p>
+                        <p>Drag & drop a privacy policy PDF or TXT file, or click to browse.</p>
+                        <p class="upload-hint">Supported formats: PDF, TXT (max 16MB)</p>
+                        <input type="file" id="privacy-file-input" accept=".pdf,.txt" style="display: none;">
+                        <button id="privacy-browse-btn" class="btn-primary">
+                            <span class="btn-icon">📄</span>
+                            Select File
+                        </button>
+                    </div>
+                </div>
+                <div id="privacy-selected-file" class="privacy-selected-file hidden">
+                    <span id="privacy-selected-filename"></span>
+                    <button id="privacy-remove-file" class="btn-close">×</button>
+                </div>
+                <button id="analyze-privacy" class="btn-primary" disabled>
+                    <span class="btn-icon">🔍</span>
+                    Run Compliance Review
+                </button>
+                <div id="privacy-loading" class="privacy-loading hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing privacy policy... This may take a moment.</p>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div id="privacy-review-result" class="result-container hidden"></div>
         </section>
 
         <div class="actions-bar hidden" id="actions-bar">

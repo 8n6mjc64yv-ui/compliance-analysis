@@ -1,0 +1,37 @@
+Privacy Policy
+Last Updated: December 2025
+
+This Privacy Policy explains how we collect, use, and protect personal information when users access our website and services.
+
+1. Information We Collect
+We collect personal information such as name, email address, and usage data to improve our services and enhance user experience.
+
+2. User Consent
+Personal data is collected only after obtaining explicit user consent. Users may withdraw their consent at any time by contacting us.
+
+3. Purpose of Data Collection
+We use collected data for service improvement, communication, analytics, and customer support purposes.
+
+4. Data Retention
+User data is retained for a limited period based on operational requirements. Data is deleted when it is no longer necessary.
+
+5. Data Deletion and Erasure
+Users have the right to request deletion of their personal data. Upon request, we will remove the data unless retention is required by law.
+
+6. Third-Party Data Sharing
+We may share user data with trusted third-party partners to support analytics and service delivery. These partners are required to protect user data.
+
+7. Data Security
+We implement reasonable security measures to protect personal data from unauthorized access, alteration, or disclosure.
+
+8. User Rights
+Users may request access to their personal data and ask for corrections if the data is inaccurate.
+
+9. Cookies and Tracking Technologies
+Our website may use cookies and similar tracking technologies to analyze traffic and improve functionality.
+
+10. Contact Information
+If you have questions or concerns regarding this Privacy Policy, please contact us at privacy@samplecompany.com.
+
+Disclaimer:
+This policy is provided for informational purposes only and does not constitute legal advice.

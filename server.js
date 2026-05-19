@@ -177,6 +177,74 @@ app.get('/api/knowledge-base/search', (req, res) => {
     res.json(results);
 });
 
+// Privacy Policy Compliance Review uploads
+const PRIVACY_UPLOADS_DIR = path.join(__dirname, 'privacy_uploads');
+fs.ensureDirSync(PRIVACY_UPLOADS_DIR);
+
+const privacyUpload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, PRIVACY_UPLOADS_DIR),
+        filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, uniqueSuffix + path.extname(file.originalname));
+        }
+    }),
+    limits: { fileSize: 16 * 1024 * 1024 }, // 16MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            'application/pdf',
+            'text/plain',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only PDF, DOCX, and TXT files are allowed.'));
+        }
+    }
+});
+
+// Privacy Policy Compliance Review endpoint
+app.post('/api/privacy-review', privacyUpload.single('policyFile'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No file uploaded' });
+        }
+
+        const filePath = req.file.path;
+
+        // Call the Python privacy compliance checker
+        const { execFile } = require('child_process');
+        execFile('python3', ['privacy_checker.py', filePath], {
+            cwd: __dirname,
+            timeout: 30000
+        }, (error, stdout, stderr) => {
+            if (error) {
+                console.error('Privacy checker error:', stderr || error.message);
+                return res.status(500).json({
+                    success: false,
+                    error: 'Privacy compliance analysis failed: ' + (stderr || error.message)
+                });
+            }
+
+            try {
+                const result = JSON.parse(stdout.trim());
+                result.originalFilename = req.file.originalname;
+                res.json(result);
+            } catch (parseError) {
+                console.error('Failed to parse privacy checker output:', stdout);
+                res.status(500).json({
+                    success: false,
+                    error: 'Failed to parse analysis results'
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Privacy review error:', error);
+        res.status(500).json({ success: false, error: 'Privacy review failed' });
+    }
+});
+
 app.get('/api/knowledge-base/download/:id', (req, res) => {
     const { id } = req.params;
     const entry = knowledgeBase.find(e => e.id === id);

@@ -683,14 +683,14 @@ header h1 {
     background: var(--ey-black);
     color: var(--ey-yellow);
     font-weight: 700;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-family: Arial, Helvetica, sans-serif;
 }
 
 .risk-matrix-cell.header-corner {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
 }
 
 /* Loading Overlay */
@@ -1264,9 +1264,9 @@ header h1 {
 /* Classification Badges */
 .classification-badge {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
+    padding: 6px 16px;
     border-radius: 0;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     margin-left: 0.5rem;
@@ -1330,6 +1330,31 @@ header h1 {
 
 .classification-box.classification-red strong {
     color: var(--ey-yellow);
+}
+
+/* Risk Determination Reasoning */
+.analysis-basis-box {
+    background: var(--ey-black);
+    border: 2px solid var(--ey-black);
+    border-left: 6px solid var(--ey-yellow);
+    padding: 0.85rem 1rem;
+    margin: 0.75rem 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.analysis-basis-header {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ey-yellow);
+    margin-bottom: 0.4rem;
+}
+
+.analysis-basis-body {
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--ey-white);
 }
 
 .escalation-notice {
@@ -1636,4 +1661,364 @@ header h1 {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     border-left: 4px solid var(--ey-yellow);
+}
+
+.section-intro {
+    color: var(--ey-dark-gray);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ============================================================
+   Phase 4: Privacy Policy Compliance Review
+   ============================================================ */
+
+.upload-area {
+    border: 2px dashed var(--ey-medium-gray);
+    border-radius: 0;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--ey-white);
+    margin-bottom: 1rem;
+}
+
+.upload-area:hover {
+    border-color: var(--ey-yellow);
+    background: var(--ey-light-gray);
+}
+
+.upload-area.upload-area-dragover {
+    border-color: var(--ey-yellow);
+    background: rgba(255, 231, 0, 0.08);
+}
+
+.privacy-review-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.privacy-selected-file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--ey-white);
+    border: 2px solid var(--ey-black);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ey-black);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.privacy-selected-file .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: var(--ey-dark-gray);
+    padding: 0 0.25rem;
+}
+
+.privacy-selected-file .btn-close:hover {
+    color: #DC143C;
+}
+
+.privacy-loading {
+    text-align: center;
+    padding: 2rem;
+}
+
+.privacy-loading .spinner {
+    margin: 0 auto 1rem;
+}
+
+.privacy-loading p {
+    color: var(--ey-dark-gray);
+    font-size: 0.9rem;
+}
+
+/* Results Header */
+.privacy-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--ey-light-gray);
+}
+
+.privacy-result-title h3 {
+    font-size: 1.25rem;
+    color: var(--ey-black);
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 0.25rem;
+}
+
+.privacy-result-meta {
+    font-size: 0.8rem;
+    color: var(--ey-dark-gray);
+}
+
+/* Score Cards Grid */
+.privacy-score-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.privacy-score-card {
+    background: var(--ey-white);
+    border: 2px solid var(--ey-black);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.privacy-score-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--ey-black);
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.5px;
+}
+
+.privacy-score-value.risk-green { color: #059669; }
+.privacy-score-value.risk-yellow { color: #FFE700; }
+.privacy-score-value.risk-red { color: #DC143C; }
+
+.privacy-score-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ey-dark-gray);
+}
+
+/* Status Bar */
+.privacy-status-bar {
+    display: flex;
+    gap: 1px;
+    margin-bottom: 1.5rem;
+}
+
+.privacy-status-item {
+    flex: 1;
+    text-align: center;
+    padding: 0.85rem;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.privacy-status-item.status-compliant {
+    background: var(--ey-black);
+    color: var(--ey-white);
+}
+
+.privacy-status-item.status-risky {
+    background: var(--ey-yellow);
+    color: var(--ey-black);
+}
+
+.privacy-status-item.status-missing {
+    background: #DC143C;
+    color: var(--ey-white);
+}
+
+.privacy-status-count {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.privacy-status-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+
+/* Findings Table */
+.privacy-findings {
+    margin-top: 2rem;
+}
+
+.privacy-findings h4 {
+    font-size: 1.1rem;
+    color: var(--ey-black);
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--ey-yellow);
+}
+
+.privacy-findings-table-wrapper {
+    overflow-x: auto;
+}
+
+.privacy-findings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.privacy-findings-table thead th {
+    background: var(--ey-black);
+    color: var(--ey-yellow);
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.privacy-findings-table tbody td {
+    padding: 0.7rem 0.75rem;
+    border-bottom: 1px solid var(--ey-light-gray);
+    vertical-align: top;
+    line-height: 1.45;
+}
+
+.privacy-findings-table tbody tr:hover {
+    background: var(--ey-light-gray);
+}
+
+.finding-row.finding-compliant {
+    border-left: 3px solid var(--ey-black);
+}
+
+.finding-row.finding-risky {
+    border-left: 3px solid var(--ey-yellow);
+}
+
+.finding-row.finding-missing {
+    border-left: 3px solid #DC143C;
+}
+
+.rule-description {
+    font-size: 0.72rem;
+    color: var(--ey-dark-gray);
+    margin-top: 0.2rem;
+    line-height: 1.35;
+}
+
+.privacy-status-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.status-tag-compliant {
+    background: var(--ey-black);
+    color: var(--ey-yellow);
+}
+
+.status-tag-risky {
+    background: var(--ey-yellow);
+    color: var(--ey-black);
+}
+
+.status-tag-missing {
+    background: #DC143C;
+    color: var(--ey-white);
+}
+
+.confidence-text {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--ey-dark-gray);
+    margin-top: 0.15rem;
+}
+
+.evidence-quote {
+    font-style: italic;
+    color: var(--ey-black);
+    background: var(--ey-light-gray);
+    padding: 2px 6px;
+    border-radius: 0;
+}
+
+.evidence-none {
+    color: var(--ey-medium-gray);
+    font-style: italic;
+}
+
+.recommendation-icon {
+    font-size: 0.75rem;
+}
+
+/* Disclaimer */
+.privacy-disclaimer {
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--ey-light-gray);
+    border: 1px solid var(--ey-medium-gray);
+    font-size: 0.78rem;
+    color: var(--ey-dark-gray);
+    line-height: 1.5;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.privacy-disclaimer strong {
+    color: var(--ey-black);
+}
+
+/* Error State */
+.privacy-error {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #fef2f2;
+    border: 2px solid #DC143C;
+    margin: 1rem 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.privacy-error-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.privacy-error strong {
+    display: block;
+    color: #DC143C;
+    margin-bottom: 0.25rem;
+}
+
+.privacy-error p {
+    color: var(--ey-dark-gray);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Responsive adjustments for Phase 4 */
+@media (max-width: 900px) {
+    .privacy-score-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .privacy-result-header {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .privacy-score-grid {
+        grid-template-columns: 1fr;
+    }
+    .privacy-status-bar {
+        flex-direction: column;
+    }
 }
