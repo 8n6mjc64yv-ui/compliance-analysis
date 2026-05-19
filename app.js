@@ -1523,30 +1523,43 @@ class ComplianceAnalysisSystem {
         ];
 
         const updateGapAnalysisButton = () => {
-            const allAnswered = yesNoGroups.every(group => {
+            let allAnswered = true;
+            const failedGroups = [];
+
+            yesNoGroups.forEach(group => {
+                if (!allAnswered) return; // Short-circuit only for perf, still log
+
                 const radios = document.querySelectorAll(`input[name="${group}"]`);
-                if (radios.length === 0) return true;
+                if (radios.length === 0) return;
 
-                // Skip groups inside any hidden ancestor detail section
-                let ancestor = radios[0].parentElement;
-                while (ancestor) {
-                    if (ancestor.classList.contains('yesno-detail') && ancestor.classList.contains('hidden')) return true;
-                    ancestor = ancestor.parentElement;
+                // Check if this radio group is inside a hidden parent detail section
+                let isNestedInHidden = false;
+                let el = radios[0].parentElement;
+                while (el) {
+                    if (el.matches && el.matches('.yesno-detail.hidden')) {
+                        isNestedInHidden = true;
+                        break;
+                    }
+                    el = el.parentElement;
+                }
+                if (isNestedInHidden) return;
+
+                const checkedRadio = Array.from(radios).find(r => r.checked);
+                if (!checkedRadio) {
+                    allAnswered = false;
+                    failedGroups.push(group);
+                    return;
                 }
 
-                const isChecked = Array.from(radios).some(r => r.checked);
-
-                // If Yes is selected, check if detail textarea is filled (if one exists)
-                const yesRadio = document.querySelector(`input[name="${group}"][value="yes"]`);
-                if (yesRadio && yesRadio.checked) {
-                    const detailId = yesRadio.getAttribute('data-detail');
+                if (checkedRadio.value === 'yes') {
+                    const detailId = checkedRadio.getAttribute('data-detail');
                     const textarea = document.querySelector(`#${detailId} textarea`);
-                    // If no textarea exists, Yes alone is sufficient
-                    if (!textarea) return true;
-                    return textarea.value.trim();
+                    if (textarea && !textarea.value.trim()) {
+                        allAnswered = false;
+                        failedGroups.push(group + ' (textarea empty)');
+                    }
                 }
-
-                return isChecked;
+                // No selection is always sufficient
             });
 
             document.getElementById('analyze-gaps').disabled = !allAnswered;
@@ -2347,10 +2360,26 @@ class ComplianceAnalysisSystem {
             entrustedSupervision: collectYesNoAnswer('entrusted-supervision')
         };
 
-        // Check if all fields are answered
-        const allFieldsAnswered = Object.values(businessInfo).every(value => value.answer !== '');
+        // Filter out hidden nested groups before validation
+        const visibleBusinessInfo = {};
+        for (const [key, value] of Object.entries(businessInfo)) {
+            const groupName = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+            const radios = document.querySelectorAll(`input[name="${groupName}"]`);
+            if (radios.length > 0) {
+                let isHidden = false;
+                let el = radios[0].parentElement;
+                while (el) {
+                    if (el.matches && el.matches('.yesno-detail.hidden')) { isHidden = true; break; }
+                    el = el.parentElement;
+                }
+                if (isHidden) continue; // Skip nested groups in hidden sections
+            }
+            visibleBusinessInfo[key] = value;
+        }
+
+        const allFieldsAnswered = Object.values(visibleBusinessInfo).every(value => value.answer !== '');
         if (!allFieldsAnswered) {
-            alert('Please answer all questions.');
+            alert('Please answer all questions. You can use the \'Completed\' indicators to track progress.');
             return;
         }
 
