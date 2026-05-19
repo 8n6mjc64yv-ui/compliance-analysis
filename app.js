@@ -1423,6 +1423,11 @@ class ComplianceAnalysisSystem {
         document.getElementById('analyze-laws').addEventListener('click', () => this.phaseOne());
         document.getElementById('analyze-clauses').addEventListener('click', () => this.phaseTwo());
         document.getElementById('analyze-gaps').addEventListener('click', () => this.phaseThree());
+
+        // Risk reference modal close handlers
+        document.getElementById('risk-ref-modal-close').addEventListener('click', () => this.hideRiskRefModal());
+        document.getElementById('risk-ref-backdrop').addEventListener('click', () => this.hideRiskRefModal());
+        document.getElementById('risk-ref-modal-done').addEventListener('click', () => this.hideRiskRefModal());
         document.getElementById('export-report').addEventListener('click', () => this.exportReport());
         document.getElementById('reset-all').addEventListener('click', () => this.resetAll());
 
@@ -3558,7 +3563,6 @@ class ComplianceAnalysisSystem {
                 <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
             </div>
 
-            ${(function() { try { return this.generateOrgDesignRiskRefs(); } catch(e) { console.error(e); return ''; } }).call(this)}
             <h4>Detailed Gap Findings</h4>
         `;
 
@@ -3617,11 +3621,45 @@ class ComplianceAnalysisSystem {
             `;
         });
 
+        // Add risk assessment reference button at bottom of report
+        const riskRefContent = (() => { try { return this.generateOrgDesignRiskRefs(); } catch(e) { console.error(e); return ''; } })();
+        if (riskRefContent) {
+            html += `
+                <div class="risk-ref-trigger-bar">
+                    <button id="show-risk-refs" class="btn-outline">
+                        <span class="btn-icon">📋</span>
+                        View Risk Assessment Reference
+                    </button>
+                </div>
+            `;
+        }
+
         container.innerHTML = html;
         container.classList.remove('hidden');
 
+        // Wire up risk reference button
+        const riskRefBtn = document.getElementById('show-risk-refs');
+        if (riskRefBtn) {
+            riskRefBtn.addEventListener('click', () => {
+                this.showRiskRefModal(riskRefContent);
+            });
+        }
+
         // Trigger penalty case analysis
         this.analyzePenaltyCases();
+    }
+
+    showRiskRefModal(content) {
+        const modal = document.getElementById('risk-ref-modal');
+        const body = document.getElementById('risk-ref-modal-body');
+        if (!modal || !body) return;
+        body.innerHTML = content;
+        modal.classList.remove('hidden');
+    }
+
+    hideRiskRefModal() {
+        const modal = document.getElementById('risk-ref-modal');
+        if (modal) modal.classList.add('hidden');
     }
 
     exportReport() {
