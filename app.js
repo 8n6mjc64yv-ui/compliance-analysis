@@ -1525,14 +1525,25 @@ class ComplianceAnalysisSystem {
         const updateGapAnalysisButton = () => {
             const allAnswered = yesNoGroups.every(group => {
                 const radios = document.querySelectorAll(`input[name="${group}"]`);
+                if (radios.length === 0) return true;
+
+                // Skip groups inside any hidden ancestor detail section
+                let ancestor = radios[0].parentElement;
+                while (ancestor) {
+                    if (ancestor.classList.contains('yesno-detail') && ancestor.classList.contains('hidden')) return true;
+                    ancestor = ancestor.parentElement;
+                }
+
                 const isChecked = Array.from(radios).some(r => r.checked);
 
-                // If Yes is selected, check if detail textarea is filled
+                // If Yes is selected, check if detail textarea is filled (if one exists)
                 const yesRadio = document.querySelector(`input[name="${group}"][value="yes"]`);
                 if (yesRadio && yesRadio.checked) {
                     const detailId = yesRadio.getAttribute('data-detail');
                     const textarea = document.querySelector(`#${detailId} textarea`);
-                    return textarea && textarea.value.trim();
+                    // If no textarea exists, Yes alone is sufficient
+                    if (!textarea) return true;
+                    return textarea.value.trim();
                 }
 
                 return isChecked;
@@ -3518,7 +3529,7 @@ class ComplianceAnalysisSystem {
                 <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
             </div>
 
-            ${this.generateOrgDesignRiskRefs()}
+            ${(function() { try { return this.generateOrgDesignRiskRefs(); } catch(e) { console.error(e); return ''; } }).call(this)}
             <h4>Detailed Gap Findings</h4>
         `;
 
