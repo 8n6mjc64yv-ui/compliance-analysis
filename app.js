@@ -1528,46 +1528,79 @@ class ComplianceAnalysisSystem {
         ];
 
         const updateGapAnalysisButton = () => {
-            let allAnswered = true;
-            const failedGroups = [];
+            try {
+                let allAnswered = true;
 
-            yesNoGroups.forEach(group => {
-                if (!allAnswered) return; // Short-circuit only for perf, still log
+                for (const group of yesNoGroups) {
+                    const radios = document.querySelectorAll(`input[name="${group}"]`);
+                    if (radios.length === 0) continue;
 
+                    let isNestedInHidden = false;
+                    let el = radios[0].parentElement;
+                    while (el) {
+                        if (el.matches && el.matches('.yesno-detail.hidden')) {
+                            isNestedInHidden = true;
+                            break;
+                        }
+                        el = el.parentElement;
+                    }
+                    if (isNestedInHidden) continue;
+
+                    const checkedRadio = Array.from(radios).find(r => r.checked);
+                    if (!checkedRadio) {
+                        allAnswered = false;
+                        break;
+                    }
+
+                    if (checkedRadio.value === 'yes') {
+                        const detailId = checkedRadio.getAttribute('data-detail');
+                        if (detailId) {
+                            const textarea = document.querySelector(`#${detailId} textarea`);
+                            if (textarea && !textarea.value.trim()) {
+                                allAnswered = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                const btn = document.getElementById('analyze-gaps');
+                if (btn) btn.disabled = !allAnswered;
+            } catch (e) {
+                console.error('updateGapAnalysisButton error:', e);
+            }
+        };
+
+        // Attach button state updater — button is always clickable, validation happens in phaseThree
+        updateGapAnalysisButton();
+
+        // Global debug helper
+        window.debugValidateReport = () => {
+            const results = [];
+            for (const group of yesNoGroups) {
                 const radios = document.querySelectorAll(`input[name="${group}"]`);
-                if (radios.length === 0) return;
-
-                // Check if this radio group is inside a hidden parent detail section
+                if (radios.length === 0) { results.push(`${group}: NO RADIOS`); continue; }
                 let isNestedInHidden = false;
                 let el = radios[0].parentElement;
                 while (el) {
-                    if (el.matches && el.matches('.yesno-detail.hidden')) {
-                        isNestedInHidden = true;
-                        break;
-                    }
+                    if (el.matches && el.matches('.yesno-detail.hidden')) { isNestedInHidden = true; break; }
                     el = el.parentElement;
                 }
-                if (isNestedInHidden) return;
-
+                if (isNestedInHidden) { results.push(`${group}: SKIPPED (hidden parent)`); continue; }
                 const checkedRadio = Array.from(radios).find(r => r.checked);
-                if (!checkedRadio) {
-                    allAnswered = false;
-                    failedGroups.push(group);
-                    return;
-                }
-
+                if (!checkedRadio) { results.push(`${group}: UNANSWERED`); continue; }
                 if (checkedRadio.value === 'yes') {
                     const detailId = checkedRadio.getAttribute('data-detail');
                     const textarea = document.querySelector(`#${detailId} textarea`);
-                    if (textarea && !textarea.value.trim()) {
-                        allAnswered = false;
-                        failedGroups.push(group + ' (textarea empty)');
-                    }
+                    const hasContent = textarea && textarea.value.trim();
+                    results.push(`${group}: YES ${hasContent ? '(content filled)' : '(TEXTAREA EMPTY)'}`);
+                } else {
+                    results.push(`${group}: NO (complete)`);
                 }
-                // No selection is always sufficient
-            });
-
-            document.getElementById('analyze-gaps').disabled = !allAnswered;
+            }
+            console.log('=== Report Validation ===');
+            results.forEach(r => console.log(r));
+            return results;
         };
 
         // Add change listeners to all Yes/No radios
