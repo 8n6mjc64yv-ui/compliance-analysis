@@ -1041,6 +1041,77 @@ header h1 {
     background: #fef2f2;
 }
 
+/* Org Design Risk Reference Section in Report */
+.org-design-risk-refs {
+    margin: 2rem 0;
+}
+
+.org-design-risk-refs h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--ey-black);
+    margin-bottom: 0.5rem;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.org-risk-ref-intro {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.org-ref-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.org-ref-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--ey-black);
+    color: var(--ey-white);
+}
+
+.org-ref-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.org-ref-answer {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ey-yellow);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.15rem 0.5rem;
+    border-radius: 0;
+}
+
+.org-ref-detail {
+    padding: 0.75rem 1rem;
+    background: var(--ey-light-gray);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+.org-ref-detail-label {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.org-ref-detail-text {
+    color: var(--text-secondary);
+}
+
 /* Classification Badges */
 .classification-badge {
     display: inline-block;

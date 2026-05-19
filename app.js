@@ -3280,6 +3280,175 @@ class ComplianceAnalysisSystem {
         };
     }
 
+    generateOrgDesignRiskRefs() {
+        const bizInfo = this.analysisData.businessInfo;
+        if (!bizInfo) return '';
+
+        const refs = [
+            {
+                label: '1) Parent/Subsidiary Compliance Structure',
+                answer: bizInfo.orgStructure,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes a data security and privacy compliance management framework and baseline compliance standards at the parent company level, providing compliance guidance to subsidiaries. Subsidiaries build locally adapted compliance management systems based on parent company compliance standards and jurisdictional legal requirements, establishing compliance management and reporting processes.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes a framework and baseline standards at the parent level, providing compliance guidance to subsidiaries. Subsidiaries build locally adapted systems based on parent standards and jurisdictional requirements, but implementation processes are not clearly defined.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company establishes a framework and baseline standards at the parent level, providing guidance to subsidiaries. Subsidiaries have not independently established compliance systems adapted to their jurisdictional requirements.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has not established a data security and privacy compliance management framework or baseline compliance standards.' }
+                ]
+            },
+            {
+                label: '2a) Dedicated Privacy Protection Officer',
+                answer: bizInfo.privacyOfficer,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company appoints a data security and privacy compliance officer in accordance with legal requirements, clearly defines their responsibilities, provides necessary conditions for performing duties, establishes specific processes, and refines approval/review procedures that are effectively executable.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company appoints a data security and privacy compliance officer in accordance with legal requirements, clearly defines their responsibilities, provides necessary conditions for performing duties, and establishes specific processes for approval/review of compliance matters.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company appoints a data security and privacy compliance officer in accordance with legal requirements, clearly defines their responsibilities and provides necessary conditions, but has not established specific processes for approval/review of compliance matters.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has appointed a data security and privacy compliance officer but has not clearly defined their responsibilities in accordance with legal requirements, reviewed their compliance background, or explicitly provided necessary conditions for performing their duties.' }
+                ]
+            },
+            {
+                label: '2b) Privacy/Information Security Certification',
+                answer: bizInfo.privacyCertification,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company has obtained relevant information security and privacy compliance certifications based on business characteristics and industry requirements, including but not limited to: ISO 27001, ISO 27701; GDPR privacy certification; NIST, etc.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company has not fully obtained mandatory certifications required by law based on business and industry requirements, but is in the process of applying.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company has not fully obtained mandatory certifications required by law based on business and industry requirements, with no plan within 3-5 years.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has not currently obtained any mandatory information security and privacy compliance certifications required by law.' }
+                ]
+            },
+            {
+                label: '2c) Data Processing Activities Audit',
+                answer: bizInfo.privacyAudit,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company retains logs and records of personal information processing activities in accordance with legal requirements, conducts regular compliance audits, and reviews the legality of personal information processing activities.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company retains logs and records of personal information processing activities in accordance with legal requirements, and conducts compliance audits only as mandated by law.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Sub-case 1: Company retains logs and records but does not meet legal retention period requirements; conducts audits only as mandated. Sub-case 2: Company retains logs per legal requirements but has not implemented mandated compliance audit procedures.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company neither retains logs and records of personal information processing activities nor conducts compliance audits as required by law.' }
+                ]
+            },
+            {
+                label: '3a) Internal Privacy Compliance Standards',
+                answer: bizInfo.internalStandards,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes internal privacy compliance control standards and processes per legal requirements and parent company framework. Includes Level 1 docs (Privacy Compliance Management Principles) and Level 2 docs (Data Classification Controls, Security Incident Response, DPIA Process, Subject Rights Response, Third-Party Assessment Mechanism with SOPs). All processes effectively executable.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes internal privacy compliance control standards and processes (including Level 1 & Level 2 documents as above), but effectiveness of implementation processes has not been verified.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company establishes internal privacy compliance control standards and processes (including Level 1 & Level 2 documents as above), but internal implementation processes and SOPs are not fully defined.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has not established comprehensive internal privacy compliance control standards and processes in accordance with legal requirements.' }
+                ]
+            },
+            {
+                label: '3b) Data Classification and Grading',
+                answer: bizInfo.dataClassification,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company implements data classification and grading controls for all data collected and processed based on legal and industry requirements, defines security requirements for each category and level, and regularly adjusts based on business changes.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company implements data classification and grading controls, defines security requirements per category/level and executes them, but has not updated or reviewed within the past year.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company has defined data classification and grading controls with security requirements per category/level, but actual implementation does not follow these definitions.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has not established data classification and grading controls as required by law and industry requirements.' }
+                ]
+            },
+            {
+                label: '3c) External Third-Party Data Security Check',
+                answer: bizInfo.thirdPartyCheck,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes a security review mechanism for external third-party data interaction scenarios, including: pre-engagement review of counterparty capabilities, data protection agreements clarifying obligations, periodic review/spot-check during engagement, timely data recovery post-engagement.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes a security review mechanism implementing only legally mandated obligations: 1) pre-engagement review of counterparty data security capabilities; 2) data protection agreements clarifying both parties\' data security obligations.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company has not established a detailed security review mechanism for external third-party scenarios, only developing data protection agreements as required by law.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has not developed data protection agreements to clarify both parties\' data security obligations as required by law.' }
+                ]
+            },
+            {
+                label: '3d) Emergency Response Plan',
+                answer: bizInfo.emergencyPlan,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes a security incident response management mechanism per legal requirements, including incident response procedures, internal response workflows, communication/reporting templates for regulators and affected individuals, and conducts regular drills to ensure mechanism effectiveness.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes a security incident response management mechanism per mandatory legal requirements, including incident response procedures, internal response workflows, and communication/reporting templates for regulators and affected individuals.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company has developed a security incident response management mechanism as required by law, but it only exists at the Level 1 document level without detailed implementation standards, processes, or regular drills.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has developed a security incident response management mechanism as required by law, but it only exists at the Level 1 document level without detailed implementation standards or processes.' }
+                ]
+            },
+            {
+                label: '3e) Data Disposal Records',
+                answer: bizInfo.disposalRecords,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes clear data deletion/anonymization disposal processes and mechanisms based on business characteristics and legal requirements, and retains processing records for data that meets deletion/anonymization conditions.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes clear deletion/anonymization processes and mechanisms based on business and legal requirements, and retains processing records, but records are only queryable within a certain time range.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company retains processing records for deleted/anonymized data, but this is only triggered by specific business scenarios; no clear deletion/anonymization disposal process and mechanism has been established.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has not established clear deletion/anonymization disposal processes and mechanisms based on business characteristics and legal requirements, and deletion processing records are only queryable within a limited time range.' }
+                ]
+            },
+            {
+                label: '3f) Periodic Privacy Impact Assessment',
+                answer: bizInfo.periodicPipia,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes a PIPIA mechanism based on business characteristics and legal requirements, defines trigger conditions, refines assessment processes, ensures coverage of legally required assessment scope and dimensions. For identified risks and gaps, implements remediation measures for multi-dimensional compliance optimization.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes a PIPIA mechanism, defines trigger conditions, refines processes, ensures coverage of legally required scope. However, identified compliance risks and gaps are not subsequently addressed with remediation measures.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Company establishes a PIPIA mechanism, defines trigger conditions and refines assessment processes, but does not fully cover the assessment scope and dimensions required by law.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company has only established basic requirements and principles for a PIPIA mechanism, without defining trigger conditions, refining assessment processes, or covering legally required assessment scope and dimensions.' }
+                ]
+            },
+            {
+                label: '3g) Personal Information Subject Rights Response',
+                answer: bizInfo.rightsResponseTeam,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes a personal information subject rights response mechanism per legal requirements. Internally: response workflows, response scripts, time requirements, response team, record retention. Externally: effective and accessible response channels (e.g., email, online customer service), providing clear contact methods for data subjects and responding effectively.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes a rights response mechanism. Internally: workflows, time requirements, response team, record retention. Externally: effective response channels, but non-standard scripts result in inability to effectively respond to some issues per legal requirements.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Only external response channels improved, while internally, clear response workflows, scripts, time requirements, response teams, and record retention standards have not yet been established.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company only provides external contactable response channels, but lacks an effective internal personal information subject rights response mechanism.' }
+                ]
+            },
+            {
+                label: '3h) Complaint Mechanism',
+                answer: bizInfo.complaintMechanism,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Company establishes a personal information subject complaint mechanism per legal requirements. Internally: response workflows, response scripts, time requirements, response team, record retention. Externally: effective and accessible complaint channels (e.g., email, online customer service), providing clear contact methods for data subjects and responding effectively.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Company establishes a complaint mechanism. Internally: workflows, time requirements, response team, record retention. Externally: effective complaint response channels, but non-standard scripts result in inability to effectively respond to some issues per legal requirements.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Only external complaint channels improved, while internally, clear complaint response workflows, scripts, time requirements, response teams, and record retention standards have not yet been established.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Company only provides external contactable complaint channels, but lacks an effective internal complaint response mechanism.' }
+                ]
+            }
+        ];
+
+        // Generate HTML only for questions answered "Yes"
+        const yesRefs = refs.filter(r => r.answer && r.answer.answer === 'Yes');
+        if (yesRefs.length === 0) return '';
+
+        let html = `
+            <div class="org-design-risk-refs">
+                <h4>Organizational Compliance Design Status — Risk Assessment Reference</h4>
+                <p class="org-risk-ref-intro">The following risk-level scenarios serve as reference for evaluating the completeness and maturity of your organization's compliance design, based on your responses. Use these scenarios to determine the appropriate risk classification for each area.</p>
+        `;
+
+        yesRefs.forEach(ref => {
+            const detailText = ref.answer.details || 'No additional details provided';
+            html += `
+                <div class="org-ref-card">
+                    <div class="org-ref-card-header">
+                        <span class="org-ref-label">${ref.label}</span>
+                        <span class="org-ref-answer">Answered: Yes</span>
+                    </div>
+                    <div class="org-ref-detail">
+                        <span class="org-ref-detail-label">Description:</span>
+                        <span class="org-ref-detail-text">${this.escapeHtml(detailText)}</span>
+                    </div>
+                    <div class="risk-reference">
+                        <div class="risk-ref-header">Risk Assessment Reference</div>
+                        ${ref.scenarios.map(s => `
+                            <div class="risk-ref-item ${s.level}">${s.text}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     renderGapReport() {
         const container = document.getElementById('gaps-result');
         const law = this.analysisData.selectedLaw;
@@ -3349,6 +3518,7 @@ class ComplianceAnalysisSystem {
                 <div class="risk-matrix-cell"><span class="risk-badge risk-high">High</span></div>
             </div>
 
+            ${this.generateOrgDesignRiskRefs()}
             <h4>Detailed Gap Findings</h4>
         `;
 
