@@ -1729,122 +1729,6 @@ class ComplianceAnalysisSystem {
         const container = document.getElementById('laws-result');
 
         let html = `
-            <h3>Legal Research Authoritative Sources</h3>
-
-            <h4>International Privacy Professional Resources</h4>
-            <table class="result-table">
-                <thead>
-                    <tr>
-                        <th>Source</th>
-                        <th>Website</th>
-                        <th>Purpose</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>IAPP</strong><br><em>International Association of Privacy Professionals</em></td>
-                        <td><a href="https://privacyassociation.org/" target="_blank">privacyassociation.org</a></td>
-                        <td>Core global industry organization in the field of privacy, providing privacy law database, regulator directory, professional certification, and in-depth research reports</td>
-                    </tr>
-                    <tr>
-                        <td><strong>WorldLII</strong><br><em>World Legal Information Institute</em></td>
-                        <td><a href="https://www.worldlii.org/" target="_blank">worldlii.org</a></td>
-                        <td>Non-profit global legal database, freely collecting legislation, case law, and privacy protection literature from 123 jurisdictions</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h4>Law Firms and Consulting Agencies</h4>
-            <table class="result-table">
-                <thead>
-                    <tr>
-                        <th>Source</th>
-                        <th>Website</th>
-                        <th>Purpose</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Eversheds Sutherland Updata Report</strong></td>
-                        <td><a href="https://www.eversheds-sutherland.com/hu/united-states/insights/updata-edition-25" target="_blank">eversheds-sutherland.com</a></td>
-                        <td>Quarterly global compilation of data privacy and cybersecurity regulatory developments, covering EU, US, Asia-Pacific, etc.</td>
-                    </tr>
-                    <tr>
-                        <td><strong>DLA Piper Global Data Protection Guide</strong></td>
-                        <td><a href="https://www.dlapiper.com/" target="_blank">dlapiper.com</a></td>
-                        <td>Global data protection impact assessment tool and comparative analysis of national laws</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Baker McKenzie Global Privacy Guide</strong></td>
-                        <td><a href="https://www.bakermckenzie.com/" target="_blank">bakermckenzie.com</a></td>
-                        <td>Practical guide to national data privacy laws</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h4>Official Regulatory Agencies</h4>
-            <table class="result-table">
-                <thead>
-                    <tr>
-                        <th>Region</th>
-                        <th>Agency</th>
-                        <th>Website</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>European Union</td>
-                        <td>EDPB</td>
-                        <td><a href="https://edpb.europa.eu/" target="_blank">edpb.europa.eu</a></td>
-                    </tr>
-                    <tr>
-                        <td>European Union</td>
-                        <td>EUR-Lex</td>
-                        <td><a href="https://eur-lex.europa.eu/" target="_blank">eur-lex.europa.eu</a></td>
-                    </tr>
-                    <tr>
-                        <td>United Kingdom</td>
-                        <td>ICO</td>
-                        <td><a href="https://ico.org.uk/" target="_blank">ico.org.uk</a></td>
-                    </tr>
-                    <tr>
-                        <td>United States - California</td>
-                        <td>California Department of Justice</td>
-                        <td><a href="https://oag.ca.gov/privacy/privacy-laws" target="_blank">oag.ca.gov</a></td>
-                    </tr>
-                    <tr>
-                        <td>China</td>
-                        <td>Cyberspace Administration of China</td>
-                        <td><a href="https://www.cac.gov.cn/" target="_blank">cac.gov.cn</a></td>
-                    </tr>
-                    <tr>
-                        <td>Singapore</td>
-                        <td>PDPC</td>
-                        <td><a href="https://www.pdpc.gov.sg/" target="_blank">pdpc.gov.sg</a></td>
-                    </tr>
-                    <tr>
-                        <td>Japan</td>
-                        <td>PPC</td>
-                        <td><a href="https://www.ppc.go.jp/" target="_blank">ppc.go.jp</a></td>
-                    </tr>
-                    <tr>
-                        <td>South Korea</td>
-                        <td>PIPC</td>
-                        <td><a href="https://www.pipc.go.kr/" target="_blank">pipc.go.kr</a></td>
-                    </tr>
-                    <tr>
-                        <td>India</td>
-                        <td>Data Protection Board</td>
-                        <td><a href="https://www.meity.gov.in/" target="_blank">meity.gov.in</a></td>
-                    </tr>
-                    <tr>
-                        <td>Brazil</td>
-                        <td>ANPD</td>
-                        <td><a href="https://www.gov.br/anpd/" target="_blank">gov.br/anpd</a></td>
-                    </tr>
-                </tbody>
-            </table>
-
             <h3>Applicable Law List</h3>
             <p style="margin-bottom: 10px; color: #666;"><em>Laws highlighted in gray may not apply to the selected industry context.</em></p>
             <table class="result-table">
@@ -1962,17 +1846,6 @@ class ComplianceAnalysisSystem {
             <div class="research-info">
                 <div class="agent-task">
                     <strong>Agent Task:</strong> Fetch clauses related to <em>${law.name}</em> and decompose them into a compliance control requirements matrix
-                </div>
-                <div class="authoritative-sources">
-                    <strong>Authoritative Sources:</strong>
-                    <ul>
-                        <li><strong>Official:</strong> ${this.getOfficialSource(law.id)}</li>
-                        <li><strong>Chinese:</strong> Weike Xianxing (law.wkinfo.com.cn), Peking University Law (pkulaw.com), China Laws and Regulations Database (flk.npc.gov.cn)</li>
-                        <li><strong>International:</strong> IAPP (privacyassociation.org), WorldLII (worldlii.org), Eversheds Sutherland Updata, DLA Piper Global Data Protection Guide</li>
-                        <li><strong>US State Privacy:</strong> <a href="https://iapp.org/resources/article/us-state-privacy-legislation-tracker" target="_blank">IAPP US State Privacy Legislation Tracker</a>, <a href="https://privacy.utah.gov/new-national-law-tracker/" target="_blank">Utah National Law Tracker</a>, <a href="https://www.recordinglaw.com/us-laws/data-privacy-laws/us-state-privacy-laws-comparison/" target="_blank">RecordingLaw Comparison Chart</a></li>
-                        <li><strong>US State Authorities:</strong> <a href="https://cppa.ca.gov" target="_blank">California CPPA</a>, <a href="https://privacy.ca.gov" target="_blank">California Privacy Agency</a>, <a href="https://www.oag.state.va.us/consumer-protection/" target="_blank">Virginia AG (VCDPA)</a>, <a href="https://coag.gov/office-sections/consumer-protection/" target="_blank">Colorado AG</a>, <a href="https://portal.ct.gov/ag" target="_blank">Connecticut AG</a>, <a href="https://privacy.utah.gov" target="_blank">Utah Privacy Office</a></li>
-                        <li><strong>Legal Research Platforms:</strong> <a href="https://uk.practicallaw.thomsonreuters.com" target="_blank">Practical Law (Thomson Reuters)</a>, <a href="https://today.westlaw.com" target="_blank">Westlaw</a>, <a href="https://advance.lexis.com" target="_blank">Lexis Advance</a>, <a href="https://www.dataguidance.com" target="_blank">DataGuidance</a>, <a href="https://catalog.data.gov" target="_blank">Data.gov Catalog</a>, <a href="https://eresources.loc.gov" target="_blank">Library of Congress E-Resources</a></li>
-                    </ul>
                 </div>
             </div>
 
@@ -2132,17 +2005,6 @@ class ComplianceAnalysisSystem {
                 <div class="research-info">
                     <div class="agent-task">
                         <strong>Agent Task:</strong> Retrieving publicly available penalty cases from the past two years (2024-2025), classified by violated legal provisions
-                    </div>
-                    <div class="authoritative-sources">
-                        <strong>Data Sources:</strong>
-                        <ul>
-                            <li><strong>CNIL (France):</strong> <a href="https://www.cnil.fr/en/sanctions-issued-cnil" target="_blank">Sanctions Database</a></li>
-                            <li><strong>DPC (Ireland):</strong> <a href="https://www.dataprotection.ie" target="_blank">Enforcement Actions</a></li>
-                            <li><strong>ICO (UK):</strong> <a href="https://ico.org.uk/action-weve-taken/enforcement" target="_blank">Enforcement</a></li>
-                            <li><strong>AEPD (Spain):</strong> <a href="https://www.aepd.es" target="_blank">Sanctions</a></li>
-                            <li><strong>EDPB:</strong> <a href="https://www.edpb.europa.eu/our-work-tools/enforcement_en" target="_blank">Cross-border decisions</a></li>
-                            <li><strong>Enforcement Tracker:</strong> <a href="https://www.enforcementtracker.com" target="_blank">Global Database</a></li>
-                        </ul>
                     </div>
                 </div>
 
@@ -2321,9 +2183,9 @@ class ComplianceAnalysisSystem {
         const sources = {
             'gdpr': 'EUR-Lex (eur-lex.europa.eu), EDPB (edpb.europa.eu), ICO (ico.org.uk)',
             'eda': 'EUR-Lex (eur-lex.europa.eu), National Telecom Regulators',
-            'ccpa': 'California Attorney General (oag.ca.gov), California Privacy Protection Agency',
-            'hipaa': 'HHS Office for Civil Rights (hhs.gov/hipaa)',
-            'glba': 'FTC (ftc.gov), Federal Banking Agencies',
+            'ccpa': 'California Attorney General (oag.ca.gov), California Privacy Protection Agency, RecordingLaw (recordinglaw.com)',
+            'hipaa': 'HHS Office for Civil Rights (hhs.gov/hipaa), RecordingLaw (recordinglaw.com)',
+            'glba': 'FTC (ftc.gov), Federal Banking Agencies, RecordingLaw (recordinglaw.com)',
             'pipl': 'CAC (cac.gov.cn), NPC Standing Committee (npc.gov.cn)',
             'dsl': 'CAC (cac.gov.cn), State Council (gov.cn)',
             'cybersecurity-law': 'CAC (cac.gov.cn), MIIT (miit.gov.cn)',
