@@ -1717,6 +1717,9 @@ class ComplianceAnalysisSystem {
         this.renderLawsTable(countryData);
         this.hideLoading();
 
+        // CourtListener legal research — run in background
+        this.fetchCourtListenerResearch(countryData);
+
         // Populate law selector for phase 2
         this.populateLawSelect();
 
@@ -1777,6 +1780,103 @@ class ComplianceAnalysisSystem {
 
         // Trigger penalty case analysis
         this.analyzePenaltyCases();
+    }
+
+    // CourtListener Legal Research Integration
+    async fetchCourtListenerResearch(countryData) {
+        const container = document.getElementById('laws-result');
+
+        // Show loading indicator for courtlistener section
+        const clLoaderId = 'courtlistener-loader';
+        let loaderHtml = `<div id="${clLoaderId}" class="courtlistener-section">
+            <h3>Case Law Research</h3>
+            <div class="courtlistener-loading">
+                <div class="spinner" style="width:24px;height:24px;border-width:2px;"></div>
+                <span>Querying CourtListener for relevant case law...</span>
+            </div>
+        </div>`;
+        container.insertAdjacentHTML('beforeend', loaderHtml);
+
+        const relevantLaws = countryData.laws.filter(l => this.isLawApplicableToIndustry(l, this.analysisData.industry));
+        const allResults = [];
+
+        for (const law of relevantLaws.slice(0, 5)) {
+            try {
+                const params = new URLSearchParams({
+                    lawName: law.name,
+                    lawAbbr: law.abbr || law.name,
+                    jurisdiction: countryData.name
+                });
+                const response = await fetch(`/api/courtlistener/research?${params}`);
+                const data = await response.json();
+                if (data.success && data.opinions && data.opinions.length > 0) {
+                    allResults.push({ law, data });
+                }
+            } catch (err) {
+                console.warn(`CourtListener research failed for ${law.name}:`, err.message);
+            }
+        }
+
+        // Remove loader
+        const loader = document.getElementById(clLoaderId);
+        if (loader) loader.remove();
+
+        if (allResults.length > 0) {
+            this.renderCourtListenerResults(allResults, container);
+        }
+    }
+
+    renderCourtListenerResults(allResults, container) {
+        const seenCases = new Set();
+        let html = '<div class="courtlistener-section"><h3>Case Law Research</h3>';
+        html += '<p class="section-intro">Relevant case law and judicial opinions retrieved via CourtListener API — an open legal research platform aggregating millions of US federal and state court opinions.</p>';
+
+        for (const { law, data } of allResults) {
+            const uniqueOpinions = data.opinions.filter(o => {
+                const key = o.caseName + o.dateFiled;
+                if (seenCases.has(key)) return false;
+                seenCases.add(key);
+                return true;
+            }).slice(0, 3);
+
+            if (uniqueOpinions.length === 0) continue;
+
+            html += `
+                <div class="courtlistener-law-group">
+                    <h4>${law.name} (${law.abbr || ''})</h4>
+                    <div class="courtlistener-opinions">
+            `;
+
+            uniqueOpinions.forEach(o => {
+                const dateStr = o.dateFiled ? new Date(o.dateFiled).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Date unknown';
+                html += `
+                    <div class="courtlistener-opinion-card">
+                        <div class="cl-opinion-header">
+                            <strong>${this.escapeHtml(o.caseName)}</strong>
+                            ${o.citation ? `<span class="cl-citation">${this.escapeHtml(o.citation)}</span>` : ''}
+                        </div>
+                        <div class="cl-opinion-meta">
+                            <span class="cl-court">${this.escapeHtml(o.court || 'Unknown Court')}</span>
+                            <span class="cl-date">${dateStr}</span>
+                            ${o.status ? `<span class="cl-status">${this.escapeHtml(o.status)}</span>` : ''}
+                        </div>
+                        ${o.snippet ? `<div class="cl-snippet">"${this.escapeHtml(o.snippet)}"</div>` : ''}
+                        ${o.absoluteUrl ? `<a href="${this.escapeHtml(o.absoluteUrl)}" target="_blank" class="cl-link">View on CourtListener →</a>` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div></div>';
+        }
+
+        html += `
+            <div class="courtlistener-footer">
+                <span class="cl-source-tag">Source: CourtListener API v4</span>
+                <span class="cl-source-tag"><a href="https://www.courtlistener.com" target="_blank">courtlistener.com</a></span>
+            </div>
+        </div>`;
+
+        container.insertAdjacentHTML('beforeend', html);
     }
 
     populateLawSelect() {
@@ -1926,11 +2026,29 @@ class ComplianceAnalysisSystem {
     async analyzePenaltyCases() {
         const law = this.analysisData.selectedLaw;
         this.showLoading('penalty-case-analysis agent retrieving 2024 enforcement data...');
-        await this.delay(1500);
+        await this.delay(1000);
 
         const penaltyCases = this.getPenaltyCases(law.id);
-
         this.renderPenaltyAnalysis(penaltyCases);
+
+        // Fetch supplementary case law from CourtListener
+        let clResults = null;
+        try {
+            const params = new URLSearchParams({
+                lawName: law.name,
+                lawAbbr: law.abbr || law.name,
+                jurisdiction: this.analysisData.country || ''
+            });
+            const resp = await fetch(`/api/courtlistener/research?${params}`);
+            clResults = await resp.json();
+        } catch (err) {
+            console.warn('CourtListener penalty supplement failed:', err.message);
+        }
+
+        if (clResults && clResults.success && clResults.opinions && clResults.opinions.length > 0) {
+            this.renderCourtListenerPenaltySupplement(clResults);
+        }
+
         this.hideLoading();
     }
 
@@ -2031,10 +2149,55 @@ class ComplianceAnalysisSystem {
     }
 
     generateClauseGroupedTable(casesByClause) {
-        let html = '<div class="clause-grouped-table">';
+        // Compute global totals
+        let grandTotal = 0;
+        let grandCurrency = '€';
+        const allCases = [];
+        for (const [, cases] of Object.entries(casesByClause)) {
+            for (const c of cases) {
+                const amt = this.extractPenaltyAmount(c.amount);
+                // Normalize to EUR-equivalent for grand total (approximate)
+                const eurValue = amt.currency === '$' ? amt.value * 0.92
+                    : amt.currency === '¥' ? amt.value * 0.0063
+                    : amt.currency === 'S$' ? amt.value * 0.68
+                    : amt.value;
+                grandTotal += eurValue;
+                if (amt.currency !== grandCurrency && amt.currency !== '€') grandCurrency = 'Mixed';
+                allCases.push(c);
+            }
+        }
+        if (grandCurrency !== 'Mixed') grandCurrency = '€';
+
+        // Summary stats row
+        let html = `
+            <div class="penalty-summary-row">
+                <div class="penalty-summary-card">
+                    <div class="penalty-summary-value">${allCases.length}</div>
+                    <div class="penalty-summary-label">Total Cases (2024-2025)</div>
+                </div>
+                <div class="penalty-summary-card">
+                    <div class="penalty-summary-value">${grandCurrency === 'Mixed' ? '~€' : '€'}${(grandTotal / 1000000).toFixed(0)}M</div>
+                    <div class="penalty-summary-label">Aggregate Penalties</div>
+                </div>
+                <div class="penalty-summary-card">
+                    <div class="penalty-summary-value">${allCases.length > 0 ? '€' + (grandTotal / allCases.length / 1000000).toFixed(1) + 'M' : 'N/A'}</div>
+                    <div class="penalty-summary-label">Average Per Case</div>
+                </div>
+                <div class="penalty-summary-card">
+                    <div class="penalty-summary-value">${allCases.filter(c => c.impact === 'Cross-border').length}</div>
+                    <div class="penalty-summary-label">Cross-border Cases</div>
+                </div>
+            </div>
+        `;
+
+        html += '<div class="clause-grouped-table">';
 
         for (const [clause, cases] of Object.entries(casesByClause)) {
-            const clauseTotal = cases.reduce((sum, c) => sum + this.extractPenaltyAmount(c.amount), 0);
+            const clauseTotalObj = cases.reduce((sum, c) => {
+                const amt = this.extractPenaltyAmount(c.amount);
+                return { value: sum.value + amt.value, currency: amt.currency };
+            }, { value: 0, currency: '€' });
+            const clauseTotalFormatted = this.formatPenaltyTotal(clauseTotalObj);
 
             html += `
                 <div class="clause-group">
@@ -2066,7 +2229,7 @@ class ComplianceAnalysisSystem {
                         <tfoot>
                             <tr>
                                 <td colspan="3" style="text-align: right;"><strong>Total for ${clause}:</strong></td>
-                                <td class="penalty-amount" colspan="2"><strong>€${(clauseTotal/1000000).toFixed(1)}M</strong></td>
+                                <td class="penalty-amount" colspan="2"><strong>${clauseTotalFormatted}</strong></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -2079,14 +2242,76 @@ class ComplianceAnalysisSystem {
     }
 
     extractPenaltyAmount(amountStr) {
-        const match = amountStr.match(/[\d.]+/);
-        if (match) {
-            let num = parseFloat(match[0]);
-            if (amountStr.includes('billion')) num *= 1000000000;
-            else if (amountStr.includes('million')) num *= 1000000;
-            return num;
+        // Handle comma-formatted numbers: $375,000 -> 375000
+        const cleaned = amountStr.replace(/,/g, '');
+        // Extract currency symbol
+        const currencyMatch = cleaned.match(/^[^\d]*([€$¥£S]+)/);
+        const currency = currencyMatch ? currencyMatch[1] : '€';
+        // Extract numeric value
+        const numMatch = cleaned.match(/[\d.]+/);
+        if (numMatch) {
+            let num = parseFloat(numMatch[0]);
+            if (cleaned.includes('billion')) num *= 1000000000;
+            else if (cleaned.includes('million')) num *= 1000000;
+            // Handle raw amounts (e.g., $375,000 -> 375000 not 375)
+            if (num < 1000 && cleaned.match(/[\d,]{4,}/)) {
+                num = parseFloat(cleaned.replace(/[^\d.]/g, ''));
+            }
+            return { value: num, currency };
         }
-        return 0;
+        return { value: 0, currency: '€' };
+    }
+
+    formatPenaltyTotal(totalObj) {
+        const { value, currency } = totalObj;
+        if (value >= 1000000000) return `${currency}${(value / 1000000000).toFixed(1)}B`;
+        if (value >= 1000000) return `${currency}${(value / 1000000).toFixed(1)}M`;
+        if (value >= 1000) return `${currency}${(value / 1000).toFixed(0)}K`;
+        return `${currency}${value.toFixed(0)}`;
+    }
+
+    // CourtListener supplementary case law for penalty analysis
+    renderCourtListenerPenaltySupplement(clResults) {
+        const container = document.getElementById('clauses-result');
+        const penaltySection = container.querySelector('.penalty-analysis-section');
+        if (!penaltySection) return;
+
+        const uniqueOpinions = clResults.opinions.slice(0, 5);
+
+        let html = '<div class="courtlistener-penalty-supplement">';
+        html += '<h4>Supplementary Case Law References (CourtListener)</h4>';
+        html += '<p class="section-intro">Relevant US court opinions and judicial decisions related to privacy enforcement identified via CourtListener API. These supplement the regulatory penalty data above.</p>';
+
+        html += '<div class="courtlistener-opinions">';
+        uniqueOpinions.forEach(o => {
+            const dateStr = o.dateFiled ? new Date(o.dateFiled).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Date unknown';
+            html += `
+                <div class="courtlistener-opinion-card">
+                    <div class="cl-opinion-header">
+                        <strong>${this.escapeHtml(o.caseName)}</strong>
+                        ${o.citation ? `<span class="cl-citation">${this.escapeHtml(o.citation)}</span>` : ''}
+                    </div>
+                    <div class="cl-opinion-meta">
+                        <span class="cl-court">${this.escapeHtml(o.court || 'Unknown Court')}</span>
+                        <span class="cl-date">${dateStr}</span>
+                    </div>
+                    ${o.snippet ? `<div class="cl-snippet">"${this.escapeHtml(o.snippet)}"</div>` : ''}
+                    ${o.absoluteUrl ? `<a href="${this.escapeHtml(o.absoluteUrl)}" target="_blank" class="cl-link">View on CourtListener →</a>` : ''}
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        html += `
+            <div class="courtlistener-footer">
+                <span class="cl-source-tag">Source: CourtListener API v4</span>
+                <span class="cl-source-tag"><a href="https://www.courtlistener.com" target="_blank">courtlistener.com</a></span>
+                <span class="cl-source-tag">${clResults.totalFound} results found</span>
+            </div>
+        `;
+        html += '</div>';
+
+        penaltySection.insertAdjacentHTML('beforeend', html);
     }
 
     generateRiskDistributionChart(riskCategories) {

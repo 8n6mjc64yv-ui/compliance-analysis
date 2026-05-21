@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
+const courtlistenerClient = require('./courtlistener_client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -242,6 +243,43 @@ app.post('/api/privacy-review', privacyUpload.single('policyFile'), async (req, 
     } catch (error) {
         console.error('Privacy review error:', error);
         res.status(500).json({ success: false, error: 'Privacy review failed' });
+    }
+});
+
+// CourtListener Legal Research API
+app.get('/api/courtlistener/research', async (req, res) => {
+    try {
+        const { lawName, lawAbbr, jurisdiction } = req.query;
+        if (!lawName) {
+            return res.status(400).json({ success: false, error: 'lawName parameter required' });
+        }
+        const results = await courtlistenerClient.legalResearch(
+            lawName,
+            lawAbbr || lawName,
+            jurisdiction || ''
+        );
+        res.json(results);
+    } catch (error) {
+        console.error('CourtListener research error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// CourtListener quick search
+app.get('/api/courtlistener/search', async (req, res) => {
+    try {
+        const { q, page } = req.query;
+        if (!q) {
+            return res.status(400).json({ success: false, error: 'q parameter required' });
+        }
+        const results = await courtlistenerClient.searchOpinions(q, {
+            page: page || 1,
+            order_by: 'dateFiled desc'
+        });
+        res.json({ success: true, ...results });
+    } catch (error) {
+        console.error('CourtListener search error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
