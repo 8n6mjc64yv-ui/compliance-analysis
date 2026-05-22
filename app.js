@@ -3827,40 +3827,279 @@ class ComplianceAnalysisSystem {
             }
         ];
 
-        // Generate HTML only for questions answered "Yes"
-        const yesRefs = refs.filter(r => r.answer && r.answer.answer === 'Yes');
-        if (yesRefs.length === 0) return '';
+        // --- System-Level Data Security Measures ---
+        const systemRefs = [
+            {
+                label: 'S1) Personal Information Inventory',
+                answer: bizInfo.piInventory,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> A complete inventory of personal information processing activities covering all business scenarios and systems has been established. For each data subject category, the specific fields collected (e.g., name, mobile number, location, biometric data), data volume, collection method (online form/SDK/offline paper/call center, etc.), collection purpose, legal basis, and retention period are documented. The inventory is incorporated into a change management process and is regularly (at least quarterly) cross-checked with data mapping and system scanning results to ensure completeness and accuracy.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> An inventory for major business systems is maintained, with fields and methods for core online scenarios clearly documented. A small number of offline or temporary activities (e.g., paper sign-ups at marketing events) have not yet been fully included, and a plan to complete the record has been made. The inventory adequately supports DPIAs and data subject rights responses, with no substantive compliance gaps identified.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> The inventory only covers online products and does not include employees, visitors, or offline marketing scenarios. Field descriptions are overly generic (e.g., "contact information" instead of separate entries for phone and email), data volume statistics are missing, and the collection methods of some SDKs/third-party plugins are not specified. This may lead to unclear disposal obligations and an inability to demonstrate data minimization and purpose limitation.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Nominally an inventory exists, but in reality it consists of scattered Excel files or a Wiki, with large portions of systems not covered. Field records are severely incomplete, collection methods are unclear, versions are inconsistent, and no responsible person is assigned. It is impossible to explain data sources and flows, substantively failing to meet the record-keeping obligations under GDPR Article 30 or the Personal Information Protection Law, presenting a systemic non-compliance risk.' }
+                ]
+            },
+            {
+                label: 'S2) Secure Internal System Transmission',
+                answer: bizInfo.internalTransmission,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> All inter-system data transmissions within the internal network use TLS 1.2+ encrypted channels. Critical interfaces employ mutual authentication and strong API gateway authentication. Networks are logically segregated based on sensitivity, and sensitive fields are encrypted at the application layer with integrity checks. Keys are managed by an HSM/KMS. Regular penetration testing and transport-layer security audits are conducted, with no high-risk vulnerabilities detected.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Internal transmissions are generally encrypted, but a small number of legacy internal tools still use basic authentication methods, with an upgrade to stronger authentication planned. Overall monitoring and log retention are sufficient, no security incidents have occurred, and the risk is controllable.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Core business transmissions are encrypted, but some non-core backend or data analytics systems still transmit data in plaintext. Network segments are not strictly separated, and transmission integrity checks are absent, creating a potential risk of man-in-the-middle attacks or data tampering. No regular transmission security assessments are performed.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> A large amount of internal traffic uses plaintext HTTP with shared service account credentials. There is no network isolation, allowing lateral movement to access sensitive data. The lack of transmission encryption and authentication makes information leakage highly likely, severely violating confidentiality and integrity requirements.' }
+                ]
+            },
+            {
+                label: 'S3) External Third-Party Sharing / Commissioned Processing',
+                answer: bizInfo.thirdPartySharing,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> A comprehensive third-party management framework is in place. Privacy impact assessments, due diligence, and signed data processing agreements incorporating standard contractual clauses are mandatory before any sharing or commissioned processing. Shared fields, purposes, and the third party\'s security certifications and organizational measures are clearly documented. Regular audits of third-party compliance are conducted. Cross-border transfers have implemented SCCs or followed mechanisms such as the CAC standard contract/certification. No new sharing is permitted without assessment.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Major vendors have signed data processing agreements and undergone basic due diligence. Security assessments for a few minor tools or newly onboarded service providers are still in progress, and their access has been restricted to the minimum necessary data. The overall risk is low, and a deadline for completion has been set.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Sharing records are incomplete, with some agreements lacking clauses on data processing instructions, security disposal, and audit rights. Shared fields exceed necessity, and restrictions on sub-processing by the third party are absent. Cross-border transfer scenarios have not undergone dedicated assessments, potentially violating cross-border data transfer rules.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Large volumes of data are provided to partners without formal written agreements or only under vague terms, lacking security and privacy protection constraints. No sharing inventory or review exists, creating a high risk of excessive use, resale, or use for other purposes. This may essentially constitute illegal commissioned processing or unlawful provision of personal information.' }
+                ]
+            },
+            {
+                label: 'S4) Access Control Implementation',
+                answer: bizInfo.accessControl,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Role-based access control (RBAC/ABAC) with least privilege is strictly enforced, managed via strong password policies, multi-factor authentication, and single sign-on. Privileged accounts are subject to separate safekeeping and session auditing. Permission assignments require approval, and periodic access reviews and revocations are conducted at least semi-annually. Account permissions are immediately revoked upon departure or role change, with access logs centrally monitored and alerted.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Role-based access is implemented, but some legacy systems have slightly coarse granularity with a few non-minimized authorizations, which are already included in a remediation plan. Periodic reviews are conducted annually, basic privileged account management processes exist, and while no real-time alerts are deployed, regular checks are performed. The overall security posture meets basic requirements.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Access assignments are relatively lax, with multiple departments sharing the same login accounts. MFA is not fully enabled, a formal permission review process is lacking (or is just a formality), and there are delays in deprovisioning accounts of departed employees. Audit logs are incomplete, making it difficult to detect or trace unauthorized access in a timely manner.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No formal access control policy exists; large numbers of users possess administrator or full-data-access privileges. Default or weak passwords are used, and shared accounts are common. No permission change management exists, and accounts of former employees remain able to log in, posing a severe data breach risk.' }
+                ]
+            },
+            {
+                label: 'S5) Data Display Obfuscation / Masking',
+                answer: bizInfo.displayObfuscation,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> All front-end pages, backend interfaces, reports, logs, and testing environments that display personal information have implemented dynamic data masking/obfuscation based on user roles and data classification. Test data uses format-preserving encryption or synthetic data. Masking algorithms are irreversible with key separation. Policies explicitly prohibit unnecessary plaintext display, and masking effectiveness is regularly tested.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Main functions and customer-facing interfaces are all masked; only a few internal high-level analytical reports still display complete phone numbers or emails, accessible only by specific personnel under confidentiality agreements with logging. The risk level is low, with plans to unify masking in the near term.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Masking is applied only partially on the front-end or demo environments. Backend management interfaces, API responses, system logs, etc., display full phone numbers, ID numbers, etc., in plaintext. There is no unified masking standard or tool, and some test environments use production plaintext data directly.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No data masking is implemented. Any personnel with access to a system interface or report export can see complete personal information directly. Development, testing, and training environments use untreated production data, maximizing the impact of any internal misuse or leak.' }
+                ]
+            },
+            {
+                label: 'S6) Deletion / Anonymization Mechanisms',
+                answer: bizInfo.deletionMechanism,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Data retention periods are defined based on data classification and legal requirements, with automatic triggering of deletion or irreversible anonymization upon expiry. Deletion follows secure erasure standards (e.g., overwriting or crypto-shredding), and backup and archive data are purged synchronously. A standard process for responding to data subject deletion requests is in place, with complete processing logs clearly demonstrating fulfillment of the deletion obligation.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Primary storage has manual or semi-automated deletion processes capable of handling data subject deletion requests. However, removal from backup tapes/snapshots may have a lag of weeks to months due to technical limitations, compensated by access control and encryption. Risk is assessed as low, and a solution for synchronous deletion from backups is being advanced.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Only manual deletion methods exist. Retention periods are not defined per system/scenario, and large amounts of historical data remain uncleaned. The "anonymization" scheme in use may allow re-identification through linked fields without undergoing a re-identification risk assessment, failing to guarantee true anonymization. The user deletion request process is inadequate.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Systems lack data deletion functionality or policies; data is retained in plaintext perpetually, making it impossible to execute user deletion rights. No mechanism exists for backup purging, and even if flagged as "deleted" in the front-end, data remains recoverable. This seriously violates the storage limitation principle and data subject rights.' }
+                ]
+            },
+            {
+                label: 'S7) Personal Information Processing Logs',
+                answer: bizInfo.processingLogs,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Comprehensive logs are maintained for all processing activities involving personal information, including access, query, modification, export, and deletion, recording operator, timestamp, IP address, operation type, and target data. Logs are tamper-proof (e.g., write-once storage or digital signature), centrally monitored with security alerts, retained for a period meeting legal requirements (generally not less than 6 months), and regularly audited for completeness and anomalous behavior.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Critical systems and databases have logging enabled, recording modifications and exports of personal information, but some internal query operations lack fine-grained detail. Log retention meets compliance requirements. Real-time alerting is not yet deployed, relying on periodic analysis, with low risk.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Log scope is insufficient; only logins and logouts are recorded, not specific accesses to personal information or data downloads. Logs are stored in directories that system administrators can modify or delete, lacking tamper-proof protection, and retention periods are shorter than legally required, making traceability difficult.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No logging or only extremely minimal logging is enabled, making it impossible to trace who processed personal information, when, and how. The absence of processing logs means that any data breach or unauthorized access cannot be audited at all, directly violating the accountability principle.' }
+                ]
+            },
+            {
+                label: 'S8) Data Storage Location & Security Mechanisms',
+                answer: bizInfo.storageLocation,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> A complete and up-to-date data storage inventory and data flow diagrams are maintained, precisely documenting the storage location (physical/cloud, region/availability zone), data center location, and applicable legal jurisdiction for each category of personal information. Storage method (offline/object/block storage), platform type (self-built/third-party cloud and name), cross-data-center synchronization, and cross-border backup topology are all documented. Security mechanisms are thoroughly recorded: full-disk encryption (AES-256), backup encryption, offsite disaster recovery strategies, separation of access credentials and encryption keys, regular storage security configuration audits, and data backup restoration tests achieving target success rates.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Core storage assets are fully documented, while information on a few development and testing environments is slightly outdated and being updated. Security mechanism documentation is complete, backup strategies are effective, and encryption is enabled. Overall, compliance and assurance requirements are met with low risk.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> The exact storage location of some data is not precisely recorded (e.g., actual disk region for certain services in a hybrid cloud is unclear), and the cloud platform type and shared responsibility model are not clarified. Data center synchronization involves a third location without evaluating cross-border compliance. Some storage buckets lack encryption or backup encryption, and backups are not regularly verified, posing a risk of recovery failure.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No record of data storage location and configuration exists, making it unclear on which disk, in which country, or with which cloud provider personal information actually resides. There may be unauthorized cross-border storage. Encryption is not enabled, and backups are missing or use unprotected media. If physical or logical damage occurs, data will be unrecoverable, severely violating security and compliance requirements.' }
+                ]
+            }
+        ];
 
-        let html = `
-            <div class="org-design-risk-refs">
-                <h4>Organizational Compliance Design Status — Risk Assessment Reference</h4>
-                <p class="org-risk-ref-intro">The following risk-level scenarios serve as reference for evaluating the completeness and maturity of your organization's compliance design, based on your responses. Use these scenarios to determine the appropriate risk classification for each area.</p>
-        `;
+        // --- Business Process Design Status ---
+        const processRefs = [
+            {
+                label: 'P1) Collection Purpose, Legality, Necessity & Minimal Scope Evaluation',
+                answer: bizInfo.collectionEvaluation,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> For every personal information collection activity, a documented evaluation has been performed covering the specified purpose, legal basis (consent, legitimate interest, legal obligation, etc.), necessity for each data field, and adherence to data minimization. Results are reviewed and updated whenever the processing purpose or method changes. The evaluation demonstrates that only data strictly necessary for the service is collected, with no excessive or unrelated fields.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Evaluations are completed and documented for all core products and main collection points. Some minor or newly added auxiliary features rely on a template evaluation that is less granular; a plan to deepen the analysis has been defined. Overall collection remains within reasonable scope, and no material over-collection has been identified.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Evaluations are generic and often fail to clearly distinguish between data types or justify necessity on a field-by-field basis. Certain fields are collected "just in case" without robust necessity analysis. The evaluation is not consistently updated when new features or third-party SDKs are introduced, potentially leading to excessive collection beyond the declared purpose.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No meaningful evaluation has been conducted. Collection activities are not grounded in a documented purpose or legal basis; necessity and minimality are ignored. Large volumes of personal information are gathered indiscriminately without justification, posing a fundamental compliance violation.' }
+                ]
+            },
+            {
+                label: 'P2) Data Processing Methods Documentation',
+                answer: bizInfo.processingMethods,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Complete documentation exists for all processing methods, including collection, storage, use, transfer, disclosure, and deletion, mapped to specific systems and data flows. The documentation is integrated into the data inventory and regularly maintained, enabling full traceability of how personal information is handled throughout its lifecycle.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Processing methods for major systems and data categories are well documented. A few legacy or low-risk internal tools still lack fully detailed processing descriptions, but supplementary documentation is underway. The overall level of documentation is sufficient to meet accountability requirements.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Documentation is fragmented and only partly covers the systems involved. Methods are described at a high level without specifying the actual technical and organizational measures. Some important processing activities (e.g., log data, backups) are omitted, making it difficult to demonstrate compliance with data protection principles.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> There is virtually no documentation on how personal information is processed. Processing methods are unknown or only exist in the heads of individual developers. In the event of an inquiry or incident, the organization cannot explain or prove its processing activities.' }
+                ]
+            },
+            {
+                label: 'P3) Privacy Policy Configuration',
+                answer: bizInfo.privacyPolicy,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> A comprehensive, layered privacy policy is publicly available and accessible from all entry points. It clearly explains the types of data collected, purposes, legal bases, retention periods, third-party sharing, and user rights. Configurations support separate consents for different processing activities where required, and the policy version history is managed with user re-notification upon material changes.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> The main customer-facing privacy policy is complete and compliant. Some auxiliary microsites or offline paper forms still link to a slightly outdated summary version; the update to unify these has been scheduled. No substantive risk arises from the current gap.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> The privacy policy is present but does not fully reflect actual processing activities — some data categories or SDK purposes are missing. Consent configurations are bundled rather than granular, and users cannot easily distinguish between essential and non-essential processing. This weakens transparency and valid consent.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No proper privacy policy exists, or a generic template is used without any adaptation to actual processing. Users are not informed about data collection or its purposes, failing the transparency requirement entirely.' }
+                ]
+            },
+            {
+                label: 'P4) User Rights Response Methods',
+                answer: bizInfo.rightsResponse,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Formal, documented procedures are in place to receive, verify, and respond to all data subject requests (access, rectification, erasure, restriction, data portability, objection). The processes are automated where possible, with clear internal roles, response time tracking (compliant with legal deadlines), and record-keeping of each request lifecycle. Identity verification measures are proportionate and effective.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Procedures are defined and functional for all rights, but some less common requests (e.g., data portability) may require manual coordination across multiple systems, occasionally causing slight delays within still-compliant timeframes. A project to streamline these processes is ongoing.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> A response mechanism exists on paper but is not consistently executed. Some requests, especially for deletion, are delayed or mishandled due to unclear internal responsibility or technical limitations. Identity verification is weak, increasing the risk of unauthorized disclosure.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No established mechanism to handle user rights requests. Inquiries are ignored or handled ad hoc without any formal process, making it impossible to meet statutory response obligations and exposing the organization to complaints and enforcement.' }
+                ]
+            },
+            {
+                label: 'P5) Personal Information Protection Impact Assessment (PIPIA)',
+                answer: bizInfo.pipiaResults,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> PIPIAs are conducted for all processing activities that are likely to result in high risk to individuals, including those using new technologies, large-scale processing of sensitive data, automated decision-making, or systematic monitoring. Assessments follow a structured methodology, document risks and mitigations, involve relevant stakeholders (including DPO), and are revisited periodically or upon material change.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> PIPIAs are completed for identified high-risk processing, but a few borderline activities were initially overlooked and are now under assessment. Completed assessments include appropriate risk mitigation measures, and no unmitigated high risks have been accepted.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> PIPIAs are conducted only as a formality, using a checklist approach without in-depth risk analysis. Mitigation measures are listed but not implemented or tracked. Some high-risk processing activities, such as third-party data sharing or profiling, have never undergone a formal assessment.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No PIPIAs have been performed, even for processing clearly posing high risks (e.g., large-scale biometric data, sensitive profiling). There is no awareness of the obligation, leaving individuals exposed to unassessed harms.' }
+                ]
+            },
+            {
+                label: 'P6) Third-Party Sharing — Consent & Documentation',
+                answer: bizInfo.thirdPartySharingMain,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> A complete register of all third-party data sharing is maintained, detailing recipient categories, specific data fields, sharing purpose, and legal basis. Where consent is the lawful basis, a clear, specific, and granular consent is obtained prior to sharing, separate from the main privacy notice. Consent withdrawal mechanisms are equally accessible, and sharing immediately ceases upon withdrawal. Contracts with recipients impose strict obligations.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Sharing activities are largely documented and consent mechanisms are implemented. For one or two edge cases (e.g., a share-to-social-media feature), the consent language is slightly embedded in the general terms but still distinguishable. A revision to enhance prominence is planned. All significant sharing scenarios remain covered by valid consent.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Sharing occurs with a list of partners, but the list is incomplete or outdated, and the specific data elements shared are not clearly communicated to users. Consent is often bundled under a generic "improve services" label, making it non-specific. Users cannot easily withdraw consent for individual recipients, undermining the validity of consent.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Data is actively shared with third parties without any meaningful consent or transparency. Users are unaware of the sharing. Either no consent mechanism exists, or consent is obtained through pre-ticked boxes or deemed consent, rendering it invalid and the sharing unlawful.' }
+                ]
+            },
+            {
+                label: 'P7) Supervision of Data Recipients',
+                answer: bizInfo.recipientSupervision,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> A continuous supervision framework is in place for all data recipients, including periodic audits (both desk and on-site), review of independent security certifications (ISO 27001, SOC 2, etc.), mandatory incident notification, and regular compliance reports. Supervision outcomes are documented and used to drive corrective actions or terminate non-compliant relationships.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Supervision consists of annual questionnaires and review of documentation, complemented by contractual audit rights. While no on-site audits have been conducted to date, all current recipients have provided satisfactory evidence of compliance. A risk-based on-site audit schedule is being developed.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Supervision is passive and limited to receiving a generic security compliance certificate from the recipient at contract signing. There is no ongoing monitoring or verification, and no contractual mechanism to enforce remediation if issues arise later.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No supervision is exercised over data recipients once data has been shared. The organization relies entirely on trust, with no means to verify how personal information is actually handled, effectively losing control over the data.' }
+                ]
+            },
+            {
+                label: 'P8) Recipient Contracts — Purpose, Duration & Safeguards',
+                answer: bizInfo.recipientContracts,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Every data sharing or disclosure relationship is governed by a comprehensive written contract that includes mandatory clauses on processing purpose and scope, duration, nature of processing, security measures (technical and organizational), confidentiality, data subject rights cooperation, sub-processing restrictions, breach notification, data deletion upon termination, and audit rights. Contracts align with approved standard contractual clauses.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Contracts are in place with all known recipients, and major terms are adequately defined. A few older contracts may lack explicit post-termination data deletion timeframes but contain a general return/deletion obligation. These are flagged for amendment at the next renewal.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Contracts exist but are often generic commercial agreements without specific data protection annexes. They may state general confidentiality but omit detailed security requirements, sub-processing restrictions, or incident notification timelines, leaving protection gaps.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> Data is shared without any formal written agreement, or existing agreements make no reference to data protection obligations. No purpose limitation, security standard, or liability clause is stipulated, exposing data to uncontrolled use.' }
+                ]
+            },
+            {
+                label: 'P9) Internal Sharing — Subsidiaries & Affiliated Companies',
+                answer: bizInfo.internalSharing,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Internal sharing among group entities is governed by clear intra-group agreements and unified data protection policies. The business purpose, categories of personal data, scope of sharing, and involved systems are fully documented. Each entity\'s role (controller, joint controller, processor) is defined, and appropriate safeguards (e.g., access controls, encryption) are in place. Cross-border intra-group transfers meet applicable legal requirements.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Internal sharing scenarios are documented for major affiliated entities and systems. A few legacy internal apps that access a shared customer database without a dedicated intra-group agreement are being brought into compliance via a uniform data sharing framework. Risk remains low due to common management and security perimeter.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Internal sharing happens freely across subsidiaries without a clear documentation of purpose or necessity. Personal data is accessible from group-wide systems with no role separation, and there is no internal privacy agreement specifying boundaries. This blurs controller obligations and may lead to unauthorized processing.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No distinction is made between separate legal entities; all employee and customer data is treated as a "group asset" and shared without limitation, documentation, or safeguards. This likely constitutes unlawful disclosure and violates the principle of purpose limitation.' }
+                ]
+            },
+            {
+                label: 'P10) PIPIA Before Entrusting Processing',
+                answer: bizInfo.entrustedPipia,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Before engaging any data processor, a PIPIA is conducted that specifically evaluates the risks introduced by the outsourcing, the processor\'s security posture, the sensitivity of the data, and the cross-border transfer implications. The assessment is documented and approved prior to contract execution, and its outcomes inform the contractual safeguards required.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> PIPIAs are systematically conducted for engagements involving sensitive or high-volume data. For some small, non-sensitive processing tasks (e.g., a mailing tool for newsletters), the assessment was performed using a light-touch template, which is still considered adequate. All high-risk engagements have full assessments.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> PIPIAs are not consistently triggered by the procurement process. Some entrusting relationships are established without any prior assessment, with the compliance team involved only after the fact. This can result in missed risks and inadequate contractual protections.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No PIPIAs are performed before sharing data with processors. Entrusting decisions are made based solely on business or cost considerations without any evaluation of privacy risks, significantly increasing the likelihood of a breach or violation.' }
+                ]
+            },
+            {
+                label: 'P11) Entrusted Party Contracts — Purpose, Duration & Obligations',
+                answer: bizInfo.entrustedContracts,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> A robust Data Processing Agreement (DPA) is signed with every processor, containing detailed instructions on processing purpose and scope, duration, data types, security measures (encryption, pseudonymization, resilience, etc.), confidentiality, restrictions on sub-processors, assistance with data subject rights and breach notification, data return/deletion at termination, and audit/inspection rights.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> DPAs are in place with all active processors, covering the essential obligations. Some older agreements use a slightly less detailed security schedule but still meet the core legal requirements. An update cycle is in progress to align all agreements with the latest regulatory guidance.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Contracts with processors exist but are primarily commercial service agreements with a brief data protection addendum that lacks specificity — for instance, security measures are not described concretely, and breach notification timeframes are vague. Some processors also lack an explicit restriction on using sub-processors.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> No formal contract or DPA is signed with processors. Processing is carried out based on a purchase order or verbal agreement with no data protection terms, leaving the controller in a state of non-compliance regarding the outsourced processing.' }
+                ]
+            },
+            {
+                label: 'P12) Supervision of Entrusted Parties',
+                answer: bizInfo.entrustedSupervision,
+                scenarios: [
+                    { level: 'no-risk', text: '<strong>No identified risk at this stage:</strong> Ongoing supervision of all processors is practiced, including regular audits (remote or on-site), review of third-party attestations and certifications, mandatory security incident reporting, performance of vulnerability scans, and periodic compliance meetings. Audit findings are tracked to closure, and significant non-compliance triggers contract termination clauses.' },
+                    { level: 'low-risk', text: '<strong>Low risk:</strong> Processors are required to complete an annual security self-assessment and provide updated certification proofs. The organization exercises its contractual audit right on a risk-prioritized basis, and no material issues have been found. Full on-site audits are planned for high-risk processors.' },
+                    { level: 'medium-risk', text: '<strong>Medium risk:</strong> Supervision is largely passive; once the contract is signed, processors are rarely monitored unless an incident occurs. There is no routine verification of security measures or sub-processing activities, creating a governance gap.' },
+                    { level: 'high-risk', text: '<strong>High risk:</strong> There is no supervision of processors whatsoever. The organization has no insight into how, where, or by whom the data is being processed, and cannot detect or respond to misuse or security failures, effectively losing control over the entrusted data.' }
+                ]
+            }
+        ];
 
-        yesRefs.forEach(ref => {
-            const detailText = ref.answer.details || 'No additional details provided';
-            html += `
-                <div class="org-ref-card">
-                    <div class="org-ref-card-header">
-                        <span class="org-ref-label">${ref.label}</span>
-                        <span class="org-ref-answer">Answered: Yes</span>
-                    </div>
-                    <div class="org-ref-detail">
-                        <span class="org-ref-detail-label">Description:</span>
-                        <span class="org-ref-detail-text">${this.escapeHtml(detailText)}</span>
-                    </div>
-                    <div class="risk-reference">
-                        <div class="risk-ref-header">Risk Assessment Reference</div>
-                        ${ref.scenarios.map(s => `
-                            <div class="risk-ref-item ${s.level}">${s.text}</div>
-                        `).join('')}
-                    </div>
+        // Build table for each dimension
+        const buildDimensionTable = (items, dimensionTitle, dimensionIntro) => {
+            if (items.length === 0) return '';
+            let tableHtml = `
+            <div class="risk-ref-dimension">
+                <h4>${dimensionTitle}</h4>
+                <p class="org-risk-ref-intro">${dimensionIntro}</p>
+                <div class="risk-ref-table-wrapper">
+                    <table class="risk-ref-table">
+                        <thead>
+                            <tr>
+                                <th style="width:20%;">Control Item</th>
+                                <th style="width:20%;">No Identified Risk</th>
+                                <th style="width:20%;">Low Risk</th>
+                                <th style="width:20%;">Medium Risk</th>
+                                <th style="width:20%;">High Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            items.forEach(ref => {
+                const detailText = ref.answer.details ? `<br><span class="risk-ref-answer-note">Your input: ${this.escapeHtml(ref.answer.details)}</span>` : '';
+                const noRisk = ref.scenarios.find(s => s.level === 'no-risk');
+                const lowRisk = ref.scenarios.find(s => s.level === 'low-risk');
+                const medRisk = ref.scenarios.find(s => s.level === 'medium-risk');
+                const highRisk = ref.scenarios.find(s => s.level === 'high-risk');
+                tableHtml += `
+                            <tr>
+                                <td class="risk-ref-item-label">${ref.label}${detailText}</td>
+                                <td class="risk-ref-cell risk-cell-no">${noRisk ? noRisk.text : ''}</td>
+                                <td class="risk-ref-cell risk-cell-low">${lowRisk ? lowRisk.text : ''}</td>
+                                <td class="risk-ref-cell risk-cell-medium">${medRisk ? medRisk.text : ''}</td>
+                                <td class="risk-ref-cell risk-cell-high">${highRisk ? highRisk.text : ''}</td>
+                            </tr>
+                `;
+            });
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            `;
+            return tableHtml;
+        };
+
+        const orgHtml = buildDimensionTable(refs, 'Dimension 1: Organizational Compliance Design Status', 'Risk-level evaluation scenarios for organizational compliance design controls. Reference these scenarios to determine the appropriate risk classification for each area based on your Phase 3 responses.');
+        const sysHtml = buildDimensionTable(systemRefs, 'Dimension 2: System-Level Data Security Measures', 'Risk-level evaluation scenarios for system-level data security controls. Reference these scenarios to determine the appropriate risk classification for each technical control area based on your Phase 3 responses.');
+        const procHtml = buildDimensionTable(processRefs, 'Dimension 3: Business Process Design Status', 'Risk-level evaluation scenarios for business process design controls. Reference these scenarios to determine the appropriate risk classification for each operational process area based on your Phase 3 responses.');
+
+        if (!orgHtml && !sysHtml && !procHtml) {
+            return `
+                <div class="risk-ref-dimension">
+                    <h4>Risk Assessment Reference</h4>
+                    <p class="org-risk-ref-intro">Complete Phase 3 questions to see risk assessment reference scenarios for each compliance dimension. The reference will display four-tier risk levels (No Identified Risk / Low / Medium / High) for each control area based on your organizational, system-level, and business process inputs.</p>
                 </div>
             `;
-        });
+        }
 
-        html += '</div>';
-        return html;
+        return `
+            <div class="risk-ref-all-dimensions">
+                ${orgHtml}
+                ${sysHtml}
+                ${procHtml}
+            </div>
+        `;
     }
 
     escapeHtml(text) {
@@ -4003,26 +4242,24 @@ class ComplianceAnalysisSystem {
             `;
         });
 
-        // Add risk assessment reference button at bottom of report
-        const riskRefContent = (() => { try { return this.generateOrgDesignRiskRefs(); } catch(e) { console.error(e); return ''; } })();
-        if (riskRefContent) {
-            html += `
-                <div class="risk-ref-trigger-bar">
-                    <button id="show-risk-refs" class="btn-outline">
-                        <span class="btn-icon">📋</span>
-                        View Risk Assessment Reference
-                    </button>
-                </div>
-            `;
-        }
+        // Add risk assessment reference button at bottom of report (always visible)
+        html += `
+            <div class="risk-ref-trigger-bar">
+                <button id="show-risk-refs" class="btn-outline">
+                    <span class="btn-icon">📋</span>
+                    View Risk Assessment Reference
+                </button>
+            </div>
+        `;
 
         container.innerHTML = html;
         container.classList.remove('hidden');
 
-        // Wire up risk reference button
+        // Wire up risk reference button — generate content on click
         const riskRefBtn = document.getElementById('show-risk-refs');
         if (riskRefBtn) {
             riskRefBtn.addEventListener('click', () => {
+                const riskRefContent = (() => { try { return this.generateOrgDesignRiskRefs(); } catch(e) { console.error(e); return ''; } })();
                 this.showRiskRefModal(riskRefContent);
             });
         }
