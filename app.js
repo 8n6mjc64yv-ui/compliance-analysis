@@ -4209,12 +4209,6 @@ class ComplianceAnalysisSystem {
                         ${gap.hasGap ? `
                             <p><strong>Likelihood:</strong> ${gap.likelihood}</p>
                             <p><strong>Impact:</strong> ${gap.impact}</p>
-                            ${gap.analysisBasis ? `
-                            <div class="analysis-basis-box">
-                                <div class="analysis-basis-header">Risk Determination Reasoning</div>
-                                <div class="analysis-basis-body">${gap.analysisBasis}</div>
-                            </div>
-                            ` : ''}
                             <div class="classification-box classification-${classification.classification.toLowerCase()}">
                                 <p><strong>Classification:</strong> ${classification.classification}</p>
                                 <p><strong>Priority:</strong> ${classification.priority}</p>

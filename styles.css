@@ -1390,31 +1390,6 @@ header h1 {
     color: var(--ey-yellow);
 }
 
-/* Risk Determination Reasoning */
-.analysis-basis-box {
-    background: var(--ey-black);
-    border: 2px solid var(--ey-black);
-    border-left: 6px solid var(--ey-yellow);
-    padding: 0.85rem 1rem;
-    margin: 0.75rem 0;
-    font-family: Arial, Helvetica, sans-serif;
-}
-
-.analysis-basis-header {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--ey-yellow);
-    margin-bottom: 0.4rem;
-}
-
-.analysis-basis-body {
-    font-size: 0.8rem;
-    line-height: 1.55;
-    color: var(--ey-white);
-}
-
 .escalation-notice {
     background: #fef2f2;
     border: 2px solid #DC143C;
@@ -1676,9 +1651,10 @@ header h1 {
 .dimension-section {
     background: var(--surface);
     border-radius: 0;
-    padding: 1.25rem 1.5rem;
+    padding: 1.5rem 2rem;
     margin-bottom: 1.5rem;
     border: 2px solid var(--border-color);
+    width: 100%;
 }
 
 .dimension-section h4 {
