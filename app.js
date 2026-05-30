@@ -1584,6 +1584,12 @@ class ComplianceAnalysisSystem {
         // Attach button state updater — button is always clickable, validation happens in phaseThree
         updateGapAnalysisButton();
 
+        // Watch for visibility changes on yesno-detail panels — auto re-check button
+        const visibilityObserver = new MutationObserver(() => updateGapAnalysisButton());
+        document.querySelectorAll('.yesno-detail').forEach(detail => {
+            visibilityObserver.observe(detail, { attributes: true, attributeFilter: ['class'] });
+        });
+
         // Global debug helper
         window.debugValidateReport = () => {
             const results = [];
@@ -2425,6 +2431,50 @@ class ComplianceAnalysisSystem {
         return sources[lawId] || 'Official regulatory website';
     }
 
+    validateReportReadiness() {
+        const yesNoGroups = [
+            'org-structure', 'privacy-officer', 'privacy-certification', 'privacy-audit',
+            'internal-standards', 'data-classification', 'third-party-check', 'emergency-plan',
+            'disposal-records', 'periodic-pipia', 'rights-response-team', 'complaint-mechanism',
+            'pi-inventory', 'internal-transmission', 'third-party-sharing', 'access-control',
+            'display-obfuscation', 'deletion-mechanism', 'processing-logs', 'storage-location',
+            'storage-method', 'platform-type', 'data-sync', 'security-mechanisms', 'backup-status',
+            'collection-evaluation', 'processing-methods', 'privacy-policy', 'rights-response',
+            'pipia-results', 'third-party-sharing-main', 'third-party-consent',
+            'recipient-supervision', 'recipient-contracts', 'internal-sharing',
+            'entrusted-pipia', 'entrusted-contracts', 'entrusted-supervision'
+        ];
+        const issues = [];
+        for (const group of yesNoGroups) {
+            const radios = document.querySelectorAll(`input[name="${group}"]`);
+            if (radios.length === 0) continue;
+            let isHidden = false;
+            let el = radios[0].parentElement;
+            while (el) {
+                if (el.matches && el.matches('.yesno-detail.hidden')) { isHidden = true; break; }
+                el = el.parentElement;
+            }
+            if (isHidden) continue;
+            const checkedRadio = Array.from(radios).find(r => r.checked);
+            if (!checkedRadio) { issues.push(`✗ ${group}: UNANSWERED`); continue; }
+            if (checkedRadio.value === 'yes') {
+                const detailId = checkedRadio.getAttribute('data-detail');
+                const textarea = document.querySelector(`#${detailId} textarea`);
+                if (textarea && !textarea.value.trim()) {
+                    issues.push(`✗ ${group}: YES but no detail text`);
+                } else {
+                    issues.push(`✓ ${group}: Complete (Yes)`);
+                }
+            } else {
+                issues.push(`✓ ${group}: Complete (No)`);
+            }
+        }
+        console.log('=== Report Readiness ===');
+        console.log(`Total visible: ${issues.length}, Incomplete: ${issues.filter(i => i.startsWith('✗')).length}`);
+        issues.forEach(i => console.log(i));
+        return issues;
+    }
+
     // Phase 3: Gap Analysis
     async phaseThree() {
         // Helper function to collect Yes/No answers with details
@@ -2513,8 +2563,23 @@ class ComplianceAnalysisSystem {
         }
 
         const allFieldsAnswered = Object.values(visibleBusinessInfo).every(value => value.answer !== '');
-        if (!allFieldsAnswered) {
-            alert('Please answer all questions. You can use the \'Completed\' indicators to track progress.');
+        const incompleteFields = [];
+
+        // Also verify that "Yes" answers have detail content filled in
+        for (const [key, value] of Object.entries(visibleBusinessInfo)) {
+            if (value.answer === 'Yes' && !value.details) {
+                incompleteFields.push(key);
+            }
+        }
+
+        if (!allFieldsAnswered || incompleteFields.length > 0) {
+            let msg = 'Please answer all questions below. You can use the \'Completed\' indicators to track progress.\n\n';
+            if (incompleteFields.length > 0) {
+                msg += 'Missing detail descriptions for Yes-answered questions:\n';
+                msg += incompleteFields.map(f => '• ' + f.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())).join('\n');
+                msg += '\n\nTip: Select "Yes" then fill the description textarea to complete each question.';
+            }
+            alert(msg);
             return;
         }
 
